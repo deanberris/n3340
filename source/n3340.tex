@@ -1,0 +1,293 @@
+\documentclass[10pt,a4paper]{article}
+\title{N3340 --- Rich Pointers}
+\author{Dean Michael Berris (dberris@google.com) \and Lawrence Crowl
+(crowl@google.com) \and Matt Austern (austern@google.com)}
+\date{Jan. 10, 2012}
+\usepackage{alltt}
+
+% We want to create paragraphs that don't indent the first line.
+\setlength{\parindent}{0cm}
+
+% We also want to add a line after each paragraph.
+\usepackage{parskip}
+
+% Now we want the document number to appear at the header of the page, while the
+% footer will only contain the page number flush to the right. To do this we use
+% the fancyhdr package.
+\usepackage{fancyhdr}
+\setlength{\headheight}{15pt}
+\pagestyle{fancyplain}
+\lhead{\fancyplain{}{ISO/IEC JTC1 SC22 WG21 N3340=12-0030 - Rich Pointers; Date:
+2012-01-10}}
+\rhead{}
+\rfoot{\fancyplain{}{\thepage}}
+\cfoot{}
+
+% We also want to use listings to identify parts where we're using C++ code.
+\usepackage{listings}
+\lstset{language=C++}
+
+% Let's use pretty hyperlink references...
+\usepackage{hyperref}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\section{Overview}
+
+This paper proposes the definition of a standardized rich pointer and type
+descriptor construct in C++ to allow for standardized and efficient runtime
+introspection of types and objects. Here we propose the syntax and semantics for
+a rich pointer and examples of programming problems addressed by this construct.
+
+\section{Problem Statement}
+
+There are some application areas today where rich runtime information about
+objects is crucial.  These application areas include:
+
+\begin{itemize}
+\item \textbf{Highly available server applications that have to stay up as a
+long running process and enable for dynamic adaptation to changing
+requirements.} Upgrades to these applications currently need to be closely
+coordinated and tightly controlled, usually requiring that the service be
+actually brought down when an upgrade is required. There are solutions that
+exist which involve dynamically loaded libraries but changing the design of
+already packaged types in the system usually require downtime to rebuild and
+relink the binary.
+
+\item \textbf{Applications that embed dynamic programming languages typically
+settle for either a static interface to which the embedded dynamic language
+runtime, or a pure data interface implementing a (static) protocol between the
+embedded environment and the host application.} Usually the dynamic types that
+can be generated in these embedded virtual machines are only usable in the
+context of these virtual machines limiting the interactions by which these
+embedded types interact with the host application.
+
+\item \textbf{Distributed computing systems written in C++ are largely tied to
+static interfaces and types because of the limitation of the programming
+language.} We currently do not have a standard programmatic way of dynamically
+generating types and referring to objects of these types and streaming objects
+of these types from one system to another. Current state of the art relies on
+code generators, domain specific languages, and even communication frameworks to
+achieve remote procedure calling and sharing state across elements in a
+distributed system.
+
+\item \textbf{Applications use machine learning and dynamic modeling of
+environments through continuous refinement of data structures in memory rely on
+the capability to treat code as data, or at least be able to inspect the state
+and relationship between types in a hierarchy of types.} The current limitations
+of the language force the applications that deal with constantly changing
+structures and types is to model them in runtime as merely data, losing much of
+the power of the programming language’s runtime facility for efficiently
+modeling types and objects in the process.
+
+\item \textbf{Graphical user interfaces typically rely on being able to inspect
+in­memory structures to represent graphical elements to be rendered on screen.}
+Almost all the sufficiently advanced graphical user interface toolkits now use a
+statically­defined and very rigid type system and implement a runtime meta­type
+system because the programming language currently does not have a facility of
+doing proper rich runtime introspection of types.
+\end{itemize}
+
+There are several problems that this paper aims to address. Here are some of
+these questions:
+
+\begin{itemize}
+\item \emph{How do we find out what the type of an object is at a given memory
+location?}  Type erasure allows us to expose a generic API that works well
+across module boundaries, but being able to preserve type information across
+these module boundaries without having to rebuild and relink binaries is also as
+powerful.
+
+\item \emph{How do we print the structure of a dynamic type at runtime?}
+Currently there are no ways to do this dynamically without resorting to manual,
+static, and expensive checks on types that are members of a statically-known
+hierarchy of types. There exists no standard means of knowing the type of a
+given object in memory at runtime with the current features of the language,
+especially when referred to using either a \verb+void *+ or a base type pointer.
+
+\item \emph{How do we determine the relationship between any two given types at
+runtime?} The current way of doing this requires manual checks for whether one
+type can be dynamically cast to another, and inferring from the result what the
+potential relationship between the types is. There is currently no way of
+determining what types a given type is derived from, what type of inheritance
+(public, private, protected, virtual, etc.) these relationships are, and whether
+a given type is an abstract class or whether it is a final class, etc.
+
+\item \emph{If we were able to create new types at runtime, how do we describe
+these types and inspect them?} For applications that rely on live updates for
+high availability and remote procedure calling systems, being able to
+reconstitute a type dynamically based on data obtained externally via I/O is
+crucial. Currently the only way to allow this is to implement a runtime type
+system by hand and perform all type inspections by hand, unable to leverage the
+rich type system that C++ provides. This is also important in applications where
+an embedded just-in-time (JIT) compiler can create new structures
+programmatically as well as allowing types generated in embedded runtime
+environments to be exported to the host application.
+\end{itemize}
+
+\section{Proposed Solution}
+
+The problems raised above point to general dynamic programming utilities called
+runtime introspection and reflection. Enabling introspection and reflection at
+runtime has traditionally been costly and almost always requires the concept of
+a virtual machine for it to be doable. In this paper we describe a mechanism for
+enabling introspection and potentially reflection without the need for a
+heavyweight virtual machine or runtime to make it possible. The benefits include
+but are not limited to: better runtime debugging and instrumentation for
+profiling as well as for first-class garbage collection support.
+
+\subsection{Rich Pointers}
+
+The smart pointer idiom has been generally accepted in practice largely for the
+utilities afforded to us by these smart pointers. The standard library now
+contains three smart pointers: unique\_ptr, shared\_ptr, and weak\_ptr. These
+smart pointers encapsulate generic patterns for dealing with memory ownership
+and management and makes it transparent to users.
+
+Following the smart pointer idiom this paper proposes a concept called rich
+pointers which not only carry the memory location of a given object but also a
+reference to an immutable representation of the type of this object (we call
+these type descriptors). The proposed syntax for a rich pointer follows the
+general style of a pointer but instead of using the * symbol to denote a pointer
+we use the percent ``\%'' symbol to do so.
+
+\begin{verbatim}
+  struct foo {
+      foo() {}
+      ~foo() {}
+  };
+
+  foo %p = new (std::rich) foo;
+\end{verbatim}
+
+For the most part a rich pointer behaves like a normal pointer. Dereferencing
+will yield a reference to the object pointed to but you can no longer perform
+normal pointer arithmetic. When a rich pointer is assigned to a normal pointer,
+the memory location is transferred and the reference to the original type
+descriptor is dropped (this is to ensure backward compatibility).
+
+What rich pointers support that would be hard to support with normal pointers is
+the notion of preserving type information even across casts even to
+\verb+void %+. To illustrate more appropriately:
+
+\begin{verbatim}
+  void %q = p;
+  foo %r = rich_cast<foo%>(q);
+  assert(type_descriptor(q) == type_descriptor(r));
+\end{verbatim}
+
+Because p and q point to the same object in memory, getting the type descriptor
+of both pointers will yield the same type descriptor. In fact, any object of
+type foo in memory when referred to via a rich pointer will have the same type
+descriptor.
+
+\subsection{Type Descriptors}
+
+The reason we’re proposing a language feature to support rich pointers as
+opposed to a smart pointer implemented in C++ is so that the generation of type
+descriptors can be implemented by the compiler (whether an embedded JIT
+compiler, or a normal compiler). Type descriptors are maintained by the language
+runtime are tied directly to the runtime type information (RTTI) implementation.
+
+To access a type descriptor, we’re introducing a standard function called \\
+\verb+type_descriptor+ which returns a pointer to an immutable object
+representing that unique type. Please refer to
+\autoref{chap:type-descriptors-appendix} for the complete details of the
+structure of this descriptor.
+
+What type descriptors contain is rich type information regarding a specific
+type. The idea is, all the types ever referred to via a rich pointer in a
+translation unit will expose a type descriptor. This type descriptor is then
+considered immutable and attempts to programmatically change an existing type
+descriptor invokes undefined behavior.
+
+A compiler will be able to generate these type descriptors and make them
+available to the runtime implementation. Please refer to
+\autoref{chap:example-1} for details of the example type descriptors
+generated for a simple case.
+
+\appendix
+\section{Appendix: Type Descriptor Details}
+\label{chap:type-descriptors-appendix}
+The following structure definitions show the details that type descriptors can
+contain. Here we describe a means for exposing descriptors for functions
+(\verb+function_descriptor_t+), member data (\verb+field_descriptor_t+), and
+classes/structs (\verb+type_descriptor_t+).
+
+\begin{alltt}
+  struct function\_descriptor\_t \{
+    char const *name;  // null terminated function name
+    type\_descriptor\_t const *result\_type;
+    type\_descriptor\_t const *args[];
+    enum \{ NORMAL, VIRTUAL, CONST, VOLATILE,
+           CONSTEXPR, STATIC, NAMESPACE \} qualifiers\_t;
+    int qualifiers;  // binary OR’ed qualifiers\_t values.
+    enum \{ CONSTRUCTOR, DESTRUCTOR, FREE, MEMBER \}
+    function\_type\_t;
+    function\_type\_t function\_type;
+    type\_descriptor\_t *member\_of;  // pointer to enclosing type.
+    \emph{unspecified\_type} callable;
+  \};
+\end{alltt}
+\begin{verbatim}
+  struct field_descriptor_t {
+    char const *name;  // null terminated member name
+    type_descriptor_t const *type;
+    enum { PRIVATE, PUBLIC, PROTECTED }
+    access_qualifiers_t;
+    access_qualifiers_t access_qualifier;
+    enum { INSTANCE, STATIC }
+    membership_qualifiers_t;
+    membership_qualifiers_t membership_qualifier;
+  };
+
+  struct type_descriptor_t {
+    char const * name;  // null terminated type name
+
+    struct inheritance_descriptor_t {
+      enum { PRIVATE, PUBLIC, PROTECTED } access_type_t;
+      access_type_t access_type;
+      enum { FINAL, VIRTUAL } inheritance_type_t;
+      inheritance_type_t inheritance_type;
+      type_descriptor_t const *base;
+    };
+
+    inheritance_descriptor_t *bases[];
+
+    struct method_descriptor_t {
+      enum { PRIVATE, PUBLIC, PROTECTED } access_type_t;
+      access_type_t access_type;
+      enum { NORMAL, FINAL, VIRTUAL } inheritance_type_t;
+      inheritance_type_t inheritance_type;
+      function_descriptor_t const *type;
+    };
+
+    method_descriptor_t *methods[];
+    field_descriptor_t *members[];
+    size_t size;
+  };
+\end{verbatim}
+
+The prototypes for the \verb+type_descriptor+ function are given below:
+
+\begin{verbatim}
+  template <class T>
+  type_descriptor_t const *
+  type_descriptor(T%);
+
+  template <class T>
+  type_descriptor_t const *
+  type_descriptor(T*);
+
+  template <class R, class T...>
+  function_descriptor_t const *
+  type_descriptor(R(T...) *);  // for function pointers.
+\end{verbatim}
+
+\section{Example: Generated Type Descriptors}
+\label{chap:example-1}
+
+% TODO(dberris): Add the example here!
+
+\end{document}
