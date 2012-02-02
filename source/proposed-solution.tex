@@ -1,0 +1,13 @@
+\section{Proposed Solution}
+
+The problems raised above point to general dynamic programming utilities called
+runtime introspection and reflection. Enabling introspection and reflection at
+runtime has traditionally been costly and almost always requires the concept of
+a virtual machine for it to be doable. In this paper we describe a mechanism for
+enabling introspection and potentially reflection without the need for a
+heavyweight virtual machine or runtime to make it possible. The benefits include
+but are not limited to: better runtime debugging and instrumentation for
+profiling as well as for first-class garbage collection support.
+
+\input{proposed-solution.rich-pointers.tex}
+\input{proposed-solution.type-descriptors.tex}

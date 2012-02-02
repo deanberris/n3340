@@ -1,0 +1,88 @@
+\section{Type Registration and Invalidation}
+\label{appendix:type-registration-invalidation}
+
+There are two functions that are being proposed as standard extensions in the
+\verb+<runtime>+ header: \verb+register_type+ and \verb+invalidate_type+.
+
+\verb+register_type+ is meant to be called at module initialization time
+depending on how dynamic/shared or static modules are initialized.  The result
+is a boolean indicating success and a pointer to the new immutable type
+descriptor. This will only return true if the type T is valid and that it has
+not been previously registered.
+
+\begin{verbatim}
+  // Example usage:
+  //     bool ok;
+  //     type_descriptor_t const *p;
+  //     tie(ok, p) = register_type(new(std::rich) foo);
+  //     assert(ok);
+  template <class T>
+  tuple<bool, type_descriptor_t const *>
+  register_type(T%);
+\end{verbatim}
+
+\verb+invalidate_type+ is meant to be called at module initialization time
+depending on how dynamic/shared or static modules are initialized.
+The result contains a boolean indicating success and pointers to the
+invalidated type descriptor and new type descriptor. It is important
+that this is called at module initialization time when the current
+runtime context and module-specific runtime contexts are available.
+Calls to \verb+new(std::rich)+ within module scope will always use the
+module-specific runtime context. During module initialization, calls
+to \verb+type_descriptor(...)+ will always refer to the current runtime
+context. If a type is not already registered through
+\verb+register_type(...)+ then calling \verb+invalidate_type+ will return the tuple
+(\verb+false+, \verb+nullptr+, descriptor to new type).
+
+\begin{verbatim}
+  template <class T>
+  tuple<bool, type_descriptor_t const *, type_descriptor_t const *>
+  invalidate_type(type_descriptor_t const *, T%,
+                  function<bool(type_descriptor_t const *, T%&)>);
+\end{verbatim}
+
+The following listings show example example usage of the \verb+invalidate_type+
+function.
+
+\begin{verbatim}
+  bool ok;
+  type_descriptor_t const *old_type, *new_type;
+  foo %old = nullptr;
+  tie(ok, old_type, new_type) =
+      invalidate_type(type_descriptor(old), new(std::rich) foo);
+  assert(new_type != old_type && ok);
+\end{verbatim}
+
+Another case is for ``deregistering'' a type, by simply providing nullptr to the
+second argument to \verb+invalidate_type+:
+
+\begin{verbatim}
+  tie(ok, old_type, new_type) =
+      invalidate_type(type_descriptor(old), nullptr);
+  assert(new_type == nullptr && type_invalidated(old) && !ok);
+\end{verbatim}
+
+The above is suggested for module cleanup time when types only meant for module
+scope should be deregistered and all rich pointers for these types should be
+invalidated.
+
+The third argument to \verb+invalidate_type+ is the invalidation handler
+function. This function is called when a rich pointer of an invalidated type is
+dereferenced. It is passed the old type descriptor and a reference to the
+invalidated rich pointer.  The invalidation handler should return true if it
+should allow the application to continue execution and false to force a call to
+\verb+std::abort+. The default handler throws an \verb+invalidated_ptr+
+exception which contains the invalidated pointer and a pointer to the old type
+descriptor.
+
+A convenience function for explicitly checking whether the type of a given
+pointer has been invalidated.
+
+\begin{verbatim}
+  bool type_invalidated(void%);
+\end{verbatim}
+
+There are only ever at most two versions of a type descriptor for any given
+registered type.
+
+

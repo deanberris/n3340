@@ -1,0 +1,32 @@
+\subsection{Fully Dynamic Extension}
+
+For network server applications there have been two major ways of achieving
+dynamic upgrades of a running system. The way the Apache Web Server does it as
+an example is to define a very strict protocol for how dynamic shared objects
+are described and behave -- all extensions are implemented through this system
+which also relies on the dynamic linker to resolve symbols when new modules are
+loaded into a running system. The other way is done by many games and dynamic
+systems is to embed a dynamic language runtime (like Lua) so that the parts that
+are meant to be upgraded at runtime can be implemented in a fully dynamic
+programming environment that supports this functionality natively without having
+to bring the whole application down.
+
+Both these approaches are valid but they have their own trade-offs.
+
+The dynamic module approach relies heavily on external dynamic linking solutions
+that have traditionally only been implemented in C and support only a C
+application binary interface (ABI). Although it is possible to hide the C++
+implementation behind a C interface it limits the integration possibilities
+between host applications and dynamic modules. Furthermore this facility is
+largely platform dependent and is not standardized across vendor
+implementations.
+
+Embedding a dynamic language runtime has the same limitations as typically the
+interaction between the host application and the embedded runtime are limited.
+The types generated or used in the context of the runtime typically have to be
+converted programmatically into something that the host application explicitly
+understands. The performance and maintenance costs of systems that do use
+embedded runtimes are also non-trivial.
+
+In \autoref{appendix:plugins-example} we show an approach to adding dynamically
+registered types as plug-ins to an application.

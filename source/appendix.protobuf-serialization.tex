@@ -1,0 +1,69 @@
+\section{Google Protocol Buffers Generic Serialization}
+\label{appendix:protobuf-example}
+An example of how a Google Protocol Buffer (protobuf) serialization mechanism
+would work is shown below as a function that takes any protobuf object and
+serializes it to an output stream.
+
+\begin{verbatim}
+// We want to ensure that the pointer we’re going to take does
+// point to an object statically derived from proto::Message. For
+// this we leverage the normal C++ static rules for inheritance
+// and polymorphism.
+namespace proto {
+  bool serialize(Message %m, std::ostream &os) {
+    // In here we can then inspect the type associated with the pointer m
+    // reflecting the runtime representation.
+    type_descriptor_t const *type = type_descriptor(m),
+                            *msg_type = type_descriptor<Message>(nullptr);
+
+    // We then traverse the members of the protocol buffer and perform a generic
+    // lookup of the data so we can encode properly into the output stream.
+    std::string buffer;
+    for (field_descriptor_t const *field : type->members) {
+      if (field == nullptr)
+        break;
+      if (!m->get_member(field->name, &buffer))
+        return false;
+      os.write(s.data(), s.size());
+    }
+    return true;
+  }
+}
+\end{verbatim}
+
+For exposition and completeness, we provide an example implementation of
+\verb+proto::Message+’s \verb+get_member+ function and enclosing scope using
+rich pointers and introspection functionality:
+
+\begin{verbatim}
+namespace proto {
+  class Message {
+    char *buffer_;  // dynamically initialized by derived classes
+    static std::map<std::string, type_descriptor_t const *> registry;
+
+   protected:
+    explicit Message(size_t derived_size)
+    : buffer_(new (std::nothrow) char[derived_size]) {}
+
+   public:
+    virtual bool get_member(std::string const &name, std::string *buffer) {
+      type_descriptor_t const *type =
+          registry[type_descriptor(rich_cast<Message%>(this))->name];
+      bool ok = false;
+      size_t offset = 0;
+      field_descriptor_t const * field = nullptr;
+      tie(ok, offset, field) = get_offset(name, type->members);
+      if (!ok) return false;
+      size_t size = field->type->size;
+      buffer->assign(buffer_ + offset, buffer_ + size);
+      return ok;
+    }
+
+    virtual ~Message() {
+      delete [] buffer_;
+    }
+  };
+}
+\end{verbatim}
+
+

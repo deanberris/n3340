@@ -1,0 +1,12 @@
+\section{Rationale}
+
+The current state of the art of dealing at runtime of types involves
+manipulating and traversing statically defined type descriptors. These type
+descriptors contain information about the types they’re supposed to represent
+(members, inheritance hierarchy, etc.) and are encapsulated with the same type
+they typically describe. This is useful for determining at runtime for example
+how to display certain pieces of information.
+
+\input{rationale.runtime-introspection.tex}
+\input{rationale.fully-dynamic-extension.tex}
+\input{rationale.runtime-upgrades-rpc.tex}

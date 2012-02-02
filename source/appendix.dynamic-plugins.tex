@@ -1,0 +1,57 @@
+\section{Dynamic Plugins Example}
+\label{appendix:plugins-example}
+
+Here we show one approach to adding dynamically registered types as plug-ins to
+a hypothetical server using rich pointers:
+
+\begin{verbatim}
+// We want to have a global registry of handler objects mapped to URLs.
+static map<string, pair<void%, function<void<string>>>> handlers;
+
+// Then we define a way for a new module to register completely new
+// objects at runtime:
+bool register_handler(std::string const &url,
+                      void %handler,
+                      bool replace) {
+  // Here we can determine whether the object being registered as a
+  // handler supports the required API (at runtime!)
+  type_descriptor_t const *type = type_descriptor(handler);
+  if (type == nullptr) return false;
+
+  bool compliant = true;
+  type_descriptor_t const *string_type =
+      type_descriptor(rich_cast<std::string%>(nullptr));
+
+  function<void(string)> f;
+  for (method_descriptor_t const *method : type->methods) {
+    if (method == nullptr) break;
+    compliant = compliant || (
+        equals(method->type->name, “get”)
+        && method->access_type == method_descriptor_t::PUBLIC
+        && length(method->type->args) == 2
+        && method->type->result_type == nullptr
+        && method->type->args[1] == string_type);
+    if (compliant && !f.get()) f = bind(method->type->callable, f, _1);
+  }
+  if (!compliant) return false;
+  if (!replace && handlers.find(url) != handlers.end()) return false;
+  handlers[url] = make_pair(handler, f);
+  return true;
+}
+
+// When we’re ready to handle a URL, we do the following:
+bool handle_url(std::string const &url, std::string const &request) {
+  auto it = handlers.find(url);
+  if (it != handlers.end()) {
+    try {
+      (*it)(request);
+    } catch (...) {
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+\end{verbatim}
+
+

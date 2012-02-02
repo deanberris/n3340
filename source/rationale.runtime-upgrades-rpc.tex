@@ -1,0 +1,31 @@
+\subsection{Runtime Upgrades and RPC}
+
+In the realm of distributed systems programming the remote procedure call (RPC)
+pattern is very popular and many implementations rely on a mix of static types
+and dynamic structures to represent types. CORBA services rely on a very rigid
+client and server interface described using a domain specific language to define
+the interface by which clients can interact with the server. There are also a
+number of solutions for web services like SOAP (using XML for encoding RPC
+calls) and recently more popular REST interfaces (leveraging HTTP semantics and
+usually passing data encoded in JavaScript Object Notation (JSON)).
+
+CORBA and SOAP services are typically mechanically generated using compilers
+that generate stubs later filled in by developers. These however suffer from the
+API versioning problem largely because there’s no way for the server to
+communicate with the clients the existence of new types and methods. Instead the
+coupling between the client and the server APIs require upgrades to be
+synchronized or in some cases have costly deprecation paths for client APIs that
+require the service to keep supporting an old version and the new version at the
+same time.
+
+For web services written in C++ that use JSON as the data interchange format
+between client code (typically HTML pages with JavaScript running on web
+browsers) and server code, the only way to treat the data coming from the client
+is to treat it as a stream of bytes that are parsed and maybe generate
+statically typed objects to manipulate in the server. The other problem has to
+do with streaming hand-rolled or dynamic types as JSON or another data
+interchange format like XML.
+
+See an hypothetical example of a JIT-compiling runtime-upgrading service that
+relies on dynamically generated types that are inspected and again upgraded
+using rich pointers in \autoref{appendix:jit-rpc-example}.

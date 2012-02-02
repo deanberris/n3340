@@ -1,0 +1,75 @@
+\section{JIT-Compiled RPC}
+\label{appendix:jit-rpc-example}
+In this section we provide a hypothetical service that relies on the
+notion of a JIT compiler hosted by an application that allows for dynamically
+generating types and objects that can be referred to using rich pointers.
+
+The following function takes some arbitrary input and returns a function pointer
+to a compiled function that returns objects via a rich pointer and takes context
+through a rich pointer as well.
+
+\begin{verbatim}
+function<void%(void%)> Compile(string const &input, void %data);
+\end{verbatim}
+
+Given the example for the network server, let’s consider an object
+that exposes its methods as RPC calls.
+\begin{verbatim}
+class HelloWorldRPC {
+  string url_;
+ public:
+  explicit HelloWorldRPC(url const & url)
+  : url_(url) {}
+
+  void get(string const &input);
+ private:
+  void update(string const &input);
+};
+
+void HelloWorldRPC::get(string const &input) {
+  HelloWorldRPC %self = rich_cast<HelloWorldRPC%>(this);
+  istringstream tokens(input);
+  string function;
+  tokens >> function;
+  type_descriptor_t const *this_type = type_descriptor(self);
+  for (type_descriptor_t::method_descriptor_t const *method :
+    this_type->methods) {
+    if (method == nullptr) {
+      cerr << "Cannot find function " << function << '\n'.
+      return;
+    }
+    if (function == method->type->name) {
+      if (length(method->type->args) != 2) {
+        cerr << "Cannot invoke function " << method->type->name
+             << " for bad signature.\n"
+      } else {
+        // The following call will follow C++ member access rules.
+        // In case the calling scope (determined by self) is not
+        // the correct type or is not a friend scope, then the call will
+        // throw `bad_function’.
+        method->type->callable(self, input);
+        return;
+      }
+    }
+  }
+}
+
+void HelloWorldRPC::update(string const &input) {
+  // In here we then compile the input and register a new handler
+  // that is yielded by the returned function.
+  HelloWorldRPC %self = rich_cast<HelloWorldRPC%>(this);
+  function<void%(void%)> factory = Compile(input, self);
+  if (factory.get()) {
+    // Replace the old handler with the new one!
+    auto old = handlers.find(this->url_);
+    if (register_handler(this->url_, factory(), old != handlers.end())) {
+      if (old != handlers.end()) delete it->first;
+    }
+  } else {
+    cerr << "Cannot update, Compile complains.\n";
+  }
+}
+\end{verbatim}
+
+The proposed feature enables for easily maintaining runtime types and allowing
+for self-updating applications that host fully dynamic runtimes.

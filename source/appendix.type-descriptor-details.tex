@@ -1,0 +1,77 @@
+\section{Appendix: Type Descriptor Details}
+\label{appendix:type-descriptors-appendix}
+The following structure definitions show the details that type descriptors can
+contain. Here we describe a means for exposing descriptors for functions
+(\verb+function_descriptor_t+), member data (\verb+field_descriptor_t+), and
+classes/structs (\verb+type_descriptor_t+).
+
+\begin{alltt}
+  struct function\_descriptor\_t \{
+    char const *name;  // null terminated function name
+    type\_descriptor\_t const *result\_type;
+    type\_descriptor\_t const *args[];
+    enum \{ NORMAL, VIRTUAL, CONST, VOLATILE,
+           CONSTEXPR, STATIC, NAMESPACE \} qualifiers\_t;
+    int qualifiers;  // binary OR’ed qualifiers\_t values.
+    enum \{ CONSTRUCTOR, DESTRUCTOR, FREE, MEMBER \}
+    function\_type\_t;
+    function\_type\_t function\_type;
+    type\_descriptor\_t *member\_of;  // pointer to enclosing type.
+    \emph{unspecified\_type} callable;
+  \};
+\end{alltt}
+\begin{verbatim}
+  struct field_descriptor_t {
+    char const *name;  // null terminated member name
+    type_descriptor_t const *type;
+    enum { PRIVATE, PUBLIC, PROTECTED }
+    access_qualifiers_t;
+    access_qualifiers_t access_qualifier;
+    enum { INSTANCE, STATIC }
+    membership_qualifiers_t;
+    membership_qualifiers_t membership_qualifier;
+  };
+
+  struct type_descriptor_t {
+    char const * name;  // null terminated type name
+
+    struct inheritance_descriptor_t {
+      enum { PRIVATE, PUBLIC, PROTECTED } access_type_t;
+      access_type_t access_type;
+      enum { FINAL, VIRTUAL } inheritance_type_t;
+      inheritance_type_t inheritance_type;
+      type_descriptor_t const *base;
+    };
+
+    inheritance_descriptor_t *bases[];
+
+    struct method_descriptor_t {
+      enum { PRIVATE, PUBLIC, PROTECTED } access_type_t;
+      access_type_t access_type;
+      enum { NORMAL, FINAL, VIRTUAL } inheritance_type_t;
+      inheritance_type_t inheritance_type;
+      function_descriptor_t const *type;
+    };
+
+    method_descriptor_t *methods[];
+    field_descriptor_t *members[];
+    size_t size;
+  };
+\end{verbatim}
+
+The prototypes for the \verb+type_descriptor+ function are given below:
+
+\begin{verbatim}
+  template <class T>
+  type_descriptor_t const *
+  type_descriptor(T%);
+
+  template <class T>
+  type_descriptor_t const *
+  type_descriptor(T*);
+
+  template <class R, class T...>
+  function_descriptor_t const *
+  type_descriptor(R(T...) *);  // for function pointers.
+\end{verbatim}
+
