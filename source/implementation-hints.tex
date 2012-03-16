@@ -6,7 +6,7 @@ that approximates the functionality using available language features in
 C++11. We then show what the limitations of the language and runtime are along
 the way and work towards removing the limitations.
 
-\subsection{Library Approach}
+\subsection{Library Components}
 
 Here we present a first crack at providing rich pointer support using a
 template we'll call \verb+rich_ptr+. The goal of \verb+rich_ptr+ is to provide
@@ -82,3 +82,5 @@ With a library-only implementation we cannot do the following reliably:
 The above motivations are the reason why we’re proposing that rich pointers be
 added to the language so that we can bring more of the static information
 about the program at runtime through standardized interfaces across platforms.
+
+\subsection{Compiler Assist}
