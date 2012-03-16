@@ -1,0 +1,36 @@
+\section{Implementation Hints}
+
+This section provides information about how we could implement rich pointers in the context of C++11. We approach it by first writing a library solution that approximates the functionality using available language features in C++11. We then show what the limitations of the language and runtime are along the way and work towards removing the limitations.
+
+\subsection{Library Approach}
+
+Here we present a first crack at providing rich pointer support using a template we'll call \verb+rich_ptr+. The goal of \verb+rich_ptr+ is to provide functionality for the definition and registration of types and objects of these types in the same object. Instances of \verb+rich_ptr+ will follow pointer semantics similar to what \verb+shared_ptr+ provides without the reference counting capability.
+
+In \autoref{appendix:rich_ptr-interface} we show what the interface for a \verb+rich_ptr+ would look like. The minimal interface is by design meant to mimic how pointers work. There are no special member functions except for overloads to the dereference operator and the member access operator.
+
+We then supply a means to programmatically defining type descriptors following the already presented type descriptors by hand. \autoref{appendix:rich_ptr-annotations} shows how these macros would look like and what their intended semantics are.
+
+\subsubsection{Limitations}
+
+There are a few problems in the library-only approach:
+
+\begin{itemize}
+	\item The syntax of the macros is very explicit and too verbose and deviates too much from the normal C++ syntax for class definitions.
+	\item Because you have to consciously annotate the type you’re registering, this makes it hard to manage especially if the type’s definition is not something you can change (i.e. when using a third-party provided library).
+	\item This will not properly handle dynamically loaded libraries at runtime and will be at the mercy of the implementation and platform.
+\end{itemize}
+
+With a library-only implementation we cannot do the following reliably:
+
+\begin{itemize}
+	\item \textbf{Safe runtime type invalidation.} This will require two things:
+	\begin{itemize}
+		\item A standardized registry of types available and managed at runtime.
+		\item Well defined module initialization/cleanup semantics and interfaces.
+	\end{itemize}
+	\item \textbf{Seamless invalidation at runtime.} Because of the linkage and concurrency issues introduced by standard-allowed optimizations, it is not guaranteed that library-defined invalidation routines can be protected. The worst case scenario is that code paths and branches that can be optimized appropriately using normal pointers as opposed to rich pointers are in jeopardy of behaving much poorly.
+	\item \textbf{Safe runtime type creation.} For JIT compilers at the moment, only code and data that’s accessible through opaque pointers (\verb+void *+) and rigidly-defined function pointers that have primitive return types can be integrated into the hosting runtime context. New types cannot be safely registered and invalidated without explicit runtime support of type registration.
+	\item \textbf{Automatic descriptor generation.} With the library approach types need to be explicitly registered and annotated. The compiler on the other hand has all the information it needs and can generate the type information at compilation time and can do so only for types that are used in rich pointers and types pointed to by rich pointers.
+\end{itemize}
+
+The above motivations are the reason why we’re proposing that rich pointers be added to the language so that we can bring more of the static information about the program at runtime through standardized interfaces across platforms.

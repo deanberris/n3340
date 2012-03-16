@@ -1,0 +1,38 @@
+\section{Library Interface}
+\label{appendix:rich_ptr-interface}
+
+\begin{verbatim}
+// Usage:
+//   std::rich_ptr<foo> p { new foo };
+template <class T>
+struct rich_ptr {
+  rich_ptr() = default;
+  explicit rich_ptr(T *ptr);
+  rich_ptr(rich_ptr const &other) = default;
+  rich_ptr(rich_ptr &&other) = default;
+  rich_ptr& operator=(rich_ptr) = default;
+
+  // Handle the case for when a normal bare pointer is assigned
+  // to a rich pointer.
+  template <class U> rich_ptr& operator=(U *);
+
+  ~rich_ptr() = default;
+  T& operator*() const;
+  T& operator->() const;
+
+  // We also want rich_ptr<T> to be convertible to T*.
+  operator T*() const;
+ private:
+  T *ptr_;
+  type_descriptor_t const *descriptor_;
+  static type_descriptor_t const *unique_descriptor;
+  friend template <class V> type_descriptor_t const *
+    type_descriptor(rich_ptr<V> const &);
+  friend template <class V> bool
+    type_invalidated(rich_ptr<V> const &);
+  friend template <class V> tuple<bool, type_descriptor_t const *>
+    register_type();
+  friend template <class V> void
+    swap(rich_ptr<V> &, rich_ptr<V> &);
+};
+\end{verbatim}
