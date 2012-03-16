@@ -1,17 +1,16 @@
 \subsection{Rich Pointers}
 
-The smart pointer idiom has been generally accepted in practice largely for the
-utilities afforded to us by these smart pointers. The standard library now
-contains three smart pointers: unique\_ptr, shared\_ptr, and weak\_ptr. These
-smart pointers encapsulate generic patterns for dealing with memory ownership
-and management and makes it transparent to users.
+The smart pointer idiom has been generally accepted in practice largely for
+the utilities afforded to us by these smart pointers. The standard library now
+contains three smart pointers: \verb+unique_ptr+, \verb+shared_ptr+, and
+\verb+weak_ptr+. These smart pointers encapsulate generic patterns for dealing
+with memory ownership and management and makes it transparent to users.
 
 Following the smart pointer idiom this paper proposes a concept called rich
 pointers which not only carry the memory location of a given object but also a
 reference to an immutable representation of the type of this object (we call
-these type descriptors). The proposed syntax for a rich pointer follows the
-general style of a pointer but instead of using the * symbol to denote a pointer
-we use the percent ``\%'' symbol to do so.
+these type descriptors). An example usage of the \verb+rich_ptr+ is shown
+here:
 
 \begin{verbatim}
   struct foo {
@@ -19,28 +18,25 @@ we use the percent ``\%'' symbol to do so.
       ~foo() {}
   };
 
-  foo %p = new (std::rich) foo;
+  rich_ptr<foo> p{new foo};
 \end{verbatim}
 
 For the most part a rich pointer behaves like a normal pointer. Dereferencing
-will yield a reference to the object pointed to but you can no longer perform
-normal pointer arithmetic. When a rich pointer is assigned to a normal pointer,
-the memory location is transferred and the reference to the original type
-descriptor is dropped (this is to ensure backward compatibility).
+will yield a reference to the object pointed to. A \verb+rich_ptr+ doesn't
+imply ownership semantics and is only meant to associate the type descriptor
+for a given normal pointer.
 
-What rich pointers support that would be hard to support with normal pointers is
-the notion of preserving type information even across casts even to
-\verb+void %+. To illustrate more appropriately:
+There are two primary operations supported on \verb+rich_ptr+ instances:
+getting the type descriptor and performing a \verb+rich_cast+. The following
+example illustrates the semantics of both these operations.
 
 \begin{verbatim}
-  void %q = p;
-  foo %r = rich_cast<foo%>(q);
+  rich_ptr<void> q = p;
+  rich_ptr<foo> r = rich_cast<foo>(q);
   assert(type_descriptor(q) == type_descriptor(r));
 \end{verbatim}
 
-Because p and q point to the same object in memory, getting the type descriptor
-of both pointers will yield the same type descriptor. In fact, any object of
-type foo in memory when referred to via a rich pointer will have the same type
-descriptor.
-
-
+Because p and q point to the same object in memory, getting the type
+descriptor of both rich pointers will yield the same type descriptor. In fact,
+any object of type \verb+foo+ in memory when referred to via a rich pointer
+will have the same type descriptor.
