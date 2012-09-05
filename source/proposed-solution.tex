@@ -3,11 +3,15 @@
 The problems raised above point to general dynamic programming utilities called
 runtime introspection and reflection. Enabling introspection and reflection at
 runtime has traditionally been costly and almost always requires the concept of
-a virtual machine for it to be doable. In this paper we describe a mechanism for
-enabling introspection and potentially reflection without the need for a
-heavyweight virtual machine or runtime to make it possible. The benefits include
-but are not limited to: better runtime debugging and instrumentation for
-profiling as well as for first-class garbage collection support.
+a virtual machine for it to be doable. In this section we describe a mechanism
+for enabling introspection and potentially reflection without the need for a
+heavyweight virtual machine or runtime to make it possible.
+
+There are two parts to this proposed solution: a smart pointer library and some
+compiler-assistance to generate static information. The smart pointer library
+provides the runtime introspection facilities, while compiler-assistance and
+static introspection capabilities along with additional traits cover the
+compile-time introspection facilities.
 
 \input{proposed-solution.rich-pointers.tex}
 \input{proposed-solution.type-descriptors.tex}

@@ -40,15 +40,15 @@ the power of the programming language’s runtime facility for efficiently
 modeling types and objects in the process.
 
 \item \textbf{Graphical user interfaces typically rely on being able to inspect
-in­memory structures to represent graphical elements to be rendered on screen.}
+in­-memory structures to represent graphical elements to be rendered on screen.}
 Almost all the sufficiently advanced graphical user interface toolkits now use a
-statically­defined and very rigid type system and implement a runtime meta­type
+statically­ defined and very rigid type system and implement a runtime meta­type
 system because the programming language currently does not have a facility of
 doing proper rich runtime introspection of types.
 \end{itemize}
 
 There are several problems that this paper aims to address. Here are some of
-these questions:
+these problems:
 
 \begin{itemize}
 \item \emph{How do we find out what the type of an object is at a given memory
@@ -67,10 +67,10 @@ especially when referred to using either a \verb+void *+ or a base type pointer.
 \item \emph{How do we determine the relationship between any two given types at
 runtime?} The current way of doing this requires manual checks for whether one
 type can be dynamically cast to another, and inferring from the result what the
-potential relationship between the types is. There is currently no way of
+potential relationship between the types are. There is currently no way of
 determining what types a given type is derived from, what type of inheritance
-(public, private, protected, virtual, etc.) these relationships are, and whether
-a given type is an abstract class or whether it is a final class, etc.
+(public, private, protected, virtual, etc.), and whether
+a given type is abstract or final, etc.
 
 \item \emph{If we were able to create new types at runtime, how do we describe
 these types and inspect them?} For applications that rely on live updates for
@@ -83,5 +83,3 @@ an embedded just-in-time (JIT) compiler can create new structures
 programmatically as well as allowing types generated in embedded runtime
 environments to be exported to the host application.
 \end{itemize}
-
-
