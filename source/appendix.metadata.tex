@@ -1,0 +1,87 @@
+\section{Appendix: Static Metadata}
+\label{appendix:metadata-appendix}
+In this appendix we describe the traits and types associated with the proposed \verb+metadata+ trait.
+
+\begin{alltt}
+  template <class T>
+  struct metadata \{
+    typedef \emph{unspecified\_type} type;
+  \};
+\end{alltt}
+
+As an analog to the \verb+type_descriptor_t+ defined in \autoref{appendix:type-descriptors-appendix} we present the following suggested traits for inspecting the special type \verb+metadata<T>::type+.
+
+\begin{alltt}
+  template <class T>
+  struct fields \{
+    typedef \emph{unspecified\_type} type;
+  \};
+\end{alltt}
+
+The \verb+fields+ metafunction is meant to apply to the \verb+metadata+ associated with a given type. It yields a list of types which can then each be queried with the following traits:
+
+\begin{alltt}
+  template <class T>
+  struct name \{
+    static constexpr const char* value = \emph{unspecified};
+  \};
+  
+  template <class T>
+  struct access\_qualifier \{
+    enum class access\_qualifiers\_t \{ PRIVATE, PUBLIC, PROTECTED \};
+    static constexpr access_qualifiers\_t value = \emph{unspecified};
+  \};
+  
+  template <class T>
+  struct membership\_qualifier \{
+    enum class membership\_qualifiers\_t \{ INSTANCE, STATIC \};
+    static constexpr membership\_qualifiers\_t value = \emph{unspecified};
+  \};
+\end{alltt}
+
+Another metadata trait would be to get the functions associated with a given type (if there are any). We propose a special trait called \verb+functions+ for this purpose:
+
+\begin{alltt}
+  template <class T>
+  struct functions \{
+    typedef \emph{unspecified\_type} type;
+  \};
+\end{alltt}
+
+Just like the \verb+fields+ trait, this applies to a \verb+metadata\<T\>::type+. It yields a list of types which can then each be queried with the traits that apply with the result of \verb+fields+ and the following additional traits:
+
+\begin{alltt}
+  template <class T>
+  struct result\_type \{
+    typedef \emph{unspecified\_type} type;
+  \};
+  
+  template <class T>
+  struct args \{
+    typedef \emph{unspecified\_type} type;
+  \};
+  
+  template <class T>
+  struct qualifiers \{
+    static constexpr int value = \emph{unspecified};
+  \};
+  
+  template <class T>
+  struct function\_type \{
+    enum class function\_type\_t \{ CONSTRUCTOR, DESTRUCTOR, FREE, MEMBER \};
+    static constexpr function_type_t value = \emph{unspecified};
+  \};
+  
+  template <class T>
+  struct member_of \{
+    typedef \emph{unspecified\_type} type;
+  \};
+\end{alltt}
+
+The \verb+args+ trait will yield a type-list similar to what \verb+metadata+ will provide.
+
+The \verb+qualifiers<T>::value+ value will be similar to what \verb+function\_descriptor\_t::qualifiers+ contains.
+
+The \verb+member_of+ trait will yield a type similar to what \verb+metadata+ will provide.
+
+In all these traits, the implementation decides what the types and values are (or whether they are available on inhibited for certain types).

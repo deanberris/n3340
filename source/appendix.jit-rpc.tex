@@ -9,7 +9,8 @@ to a compiled function that returns objects via a rich pointer and takes context
 through a rich pointer as well.
 
 \begin{verbatim}
-function<void%(void%)> Compile(string const &input, void %data);
+function<rich_ptr<void>(rich_ptr<void>)>
+  Compile(string const &input, rich_ptr<void> data);
 \end{verbatim}
 
 Given the example for the network server, let’s consider an object
@@ -27,7 +28,7 @@ class HelloWorldRPC {
 };
 
 void HelloWorldRPC::get(string const &input) {
-  HelloWorldRPC %self = rich_cast<HelloWorldRPC%>(this);
+  rich_ptr<HelloWorldRPC> self = make_rich<HelloWorldRPC>(this);
   istringstream tokens(input);
   string function;
   tokens >> function;
@@ -57,8 +58,8 @@ void HelloWorldRPC::get(string const &input) {
 void HelloWorldRPC::update(string const &input) {
   // In here we then compile the input and register a new handler
   // that is yielded by the returned function.
-  HelloWorldRPC %self = rich_cast<HelloWorldRPC%>(this);
-  function<void%(void%)> factory = Compile(input, self);
+  rich_ptr<HelloWorldRPC> self = make_rich<HelloWorldRPC>(this);
+  auto factory = Compile(input, self);
   if (factory.get()) {
     // Replace the old handler with the new one!
     auto old = handlers.find(this->url_);

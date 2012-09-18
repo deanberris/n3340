@@ -14,11 +14,11 @@ not been previously registered.
   // Example usage:
   //     bool ok;
   //     type_descriptor_t const *p;
-  //     tie(ok, p) = register_type(new(std::rich) foo);
+  //     tie(ok, p) = register_type(make_rich<foo>());
   //     assert(ok);
   template <class T>
   tuple<bool, type_descriptor_t const *>
-  register_type(T%);
+  register_type(rich_ptr<T>);
 \end{verbatim}
 
 \verb+invalidate_type+ is meant to be called at module initialization time
@@ -27,7 +27,7 @@ The result contains a boolean indicating success and pointers to the
 invalidated type descriptor and new type descriptor. It is important
 that this is called at module initialization time when the current
 runtime context and module-specific runtime contexts are available.
-Calls to \verb+new(std::rich)+ within module scope will always use the
+Calls to \verb+new+ within module scope will always use the
 module-specific runtime context. During module initialization, calls
 to \verb+type_descriptor(...)+ will always refer to the current runtime
 context. If a type is not already registered through
@@ -37,8 +37,8 @@ context. If a type is not already registered through
 \begin{verbatim}
   template <class T>
   tuple<bool, type_descriptor_t const *, type_descriptor_t const *>
-  invalidate_type(type_descriptor_t const *, T%,
-                  function<bool(type_descriptor_t const *, T%&)>);
+  invalidate_type(type_descriptor_t const *, rich_ptr<T>,
+                  function<bool(type_descriptor_t const *, rich_ptr<T>&)>);
 \end{verbatim}
 
 The following listings show example example usage of the \verb+invalidate_type+
@@ -47,9 +47,9 @@ function.
 \begin{verbatim}
   bool ok;
   type_descriptor_t const *old_type, *new_type;
-  foo %old = nullptr;
+  rich_ptr<foo> old{nullptr};
   tie(ok, old_type, new_type) =
-      invalidate_type(type_descriptor(old), new(std::rich) foo);
+      invalidate_type(type_descriptor(old), make_rich<foo>());
   assert(new_type != old_type && ok);
 \end{verbatim}
 
@@ -79,7 +79,7 @@ A convenience function for explicitly checking whether the type of a given
 pointer has been invalidated.
 
 \begin{verbatim}
-  bool type_invalidated(void%);
+  bool type_invalidated(rich_ptr<void>);
 \end{verbatim}
 
 There are only ever at most two versions of a type descriptor for any given

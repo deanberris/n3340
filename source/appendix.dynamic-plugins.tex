@@ -6,12 +6,12 @@ a hypothetical server using rich pointers:
 
 \begin{verbatim}
 // We want to have a global registry of handler objects mapped to URLs.
-static map<string, pair<void%, function<void<string>>>> handlers;
+static map<string, pair<rich_ptr<void>, function<void<string>>>> handlers;
 
 // Then we define a way for a new module to register completely new
 // objects at runtime:
 bool register_handler(std::string const &url,
-                      void %handler,
+                      rich_ptr<void> handler,
                       bool replace) {
   // Here we can determine whether the object being registered as a
   // handler supports the required API (at runtime!)
@@ -20,7 +20,7 @@ bool register_handler(std::string const &url,
 
   bool compliant = true;
   type_descriptor_t const *string_type =
-      type_descriptor(rich_cast<std::string%>(nullptr));
+      type_descriptor(rich_ptr<std::string>());
 
   function<void(string)> f;
   for (method_descriptor_t const *method : type->methods) {

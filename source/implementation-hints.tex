@@ -79,8 +79,31 @@ With a library-only implementation we cannot do the following reliably:
 
 \end{itemize}
 
-A previous version of this paper was proposing to add a new pointer type. The downside to that approach would be that the work required to change the standard defining a new pointer type is not enough to justify the gains.
+A previous version of this paper (N3340) was proposing to add a new pointer type. The downside to that approach would be that the work required to change the standard defining a new pointer type is not enough to justify the gains.
 
 This version of the paper introduces a hybrid approach which shows what rich pointers would look like with a library interface (\verb+rich_ptr+) while introducing some compiler assistance functionality (\verb+type_descriptor+ and \verb+metadata+).
 
 \subsection{Compiler Assist}
+
+There are two main parts where compiler assistance comes in: automatic generation of type descriptors, and static metadata. The \verb+metadata+ metafunction yields a compiler-generated type that acts as a handle to a type's definition. This same metadata is meant to be consistent with the runtime type descriptors.
+
+\subsection{Inhibiting Type Descriptor Generation}
+
+In the Kona meeting questions were raised about whether it should be possible to inhibit type descriptor generation. There are a number of approaches that can be taken for type descriptor generation:
+
+\begin{itemize}
+  \item \textbf{Default inhibit, annotate for generation (opt-in generation).} This
+  is the conservative approach. This makes it really hard to get the utility to be
+  useful to as many people as possible when implementations get around to supporting 
+  the proposed facilities.
+  
+  \item \textbf{Default generate, annotate for exclusion (opt-out generation).} This
+  is the aggressive approach which would turn it on for all types except for certain
+  types. The suggestion is to have this be controlled by type annotations which
+  should be supported by implementations.
+  
+  \item \textbf{Implementation defined.} This could be made optional similar to how
+  some implementations actually enable/disable RTTI or exception support.
+\end{itemize}
+
+Of the three above the preferred solution is to define an opt-out mechanism using type annotations.

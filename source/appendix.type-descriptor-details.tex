@@ -24,11 +24,9 @@ classes/structs (\verb+type_descriptor_t+).
   struct field_descriptor_t {
     char const *name;  // null terminated member name
     type_descriptor_t const *type;
-    enum { PRIVATE, PUBLIC, PROTECTED }
-    access_qualifiers_t;
+    enum class access_qualifiers_t { PRIVATE, PUBLIC, PROTECTED };
     access_qualifiers_t access_qualifier;
-    enum { INSTANCE, STATIC }
-    membership_qualifiers_t;
+    enum class membership_qualifiers_t { INSTANCE, STATIC };
     membership_qualifiers_t membership_qualifier;
   };
 
@@ -36,9 +34,9 @@ classes/structs (\verb+type_descriptor_t+).
     char const * name;  // null terminated type name
 
     struct inheritance_descriptor_t {
-      enum { PRIVATE, PUBLIC, PROTECTED } access_type_t;
+      enum class access_type_t { PRIVATE, PUBLIC, PROTECTED };
       access_type_t access_type;
-      enum { FINAL, VIRTUAL } inheritance_type_t;
+      enum class inheritance_type_t { FINAL, VIRTUAL };
       inheritance_type_t inheritance_type;
       type_descriptor_t const *base;
     };
@@ -46,9 +44,9 @@ classes/structs (\verb+type_descriptor_t+).
     inheritance_descriptor_t *bases[];
 
     struct method_descriptor_t {
-      enum { PRIVATE, PUBLIC, PROTECTED } access_type_t;
+      enum class access_type_t { PRIVATE, PUBLIC, PROTECTED };
       access_type_t access_type;
-      enum { NORMAL, FINAL, VIRTUAL } inheritance_type_t;
+      enum class inheritance_type_t { NORMAL, FINAL, VIRTUAL };
       inheritance_type_t inheritance_type;
       function_descriptor_t const *type;
     };
@@ -64,7 +62,7 @@ The prototypes for the \verb+type_descriptor+ function are given below:
 \begin{verbatim}
   template <class T>
   type_descriptor_t const *
-  type_descriptor(T%);
+  type_descriptor(rich_ptr<T>);
 
   template <class T>
   type_descriptor_t const *

@@ -24,10 +24,10 @@ following example case:
   };
 
   int main(int argc, char *argv[]) {
-    foo %f = new(std::rich) foo;
+    rich_ptr<foo> f{new foo};
     // The following should print “::foo”.
     std::cout << type_descriptor(f)->name << std::endl;
-    delete f;
+    delete f.get();
     return 0;
   }
 \end{verbatim}

@@ -1,0 +1,54 @@
+\section{Appendix: Using Static Metadata}
+\label{appendix:example-2}
+
+In this section we show how we can use the static metadata. We start with a minimal example similar to \autoref{appendix:example-1} where we print the name of the type.
+
+\begin{verbatim}
+  #include <iostream>
+  #include <metadata>  // proposed header.
+  
+  struct foo {};
+  
+  int main(int argc, char* argv[]) {
+    using namespace std;
+    // The following should print "::foo"
+    cout << name<metadata<foo>>::value << endl;
+    return 0;
+  }
+\end{verbatim}
+
+Because we can make inquiries on the types enabled by \verb+metadata+ we can use this in SFINAE as well as in \verb+static\_assert+ situations:
+
+\begin{verbatim}
+  template <class T>
+  constexpr void range_concept_check(T) {
+    static_assert(name<metadata<T>>::value != nullptr, "We need static reflection!");
+    
+    struct begin { static constexpr const char* value = "begin"; };
+    struct end { static constexpr const char* value = "end"; };
+    
+    // We look for a function named begin and end that return the same types.
+    // In this part we hand-wave away some metafunctions.
+    static_assert(
+      is_same<
+        result_type<
+          find<
+            functions<metadata<T>>,
+            equals<
+              name<_>::value,
+              begin::value
+            >
+          >
+        >,
+        result_type<
+          find<
+            functions<metadata<T>>,
+            equals<
+              name<_>::value,
+              end::value
+            >
+          >
+        >
+      >::value, "To be a range, begin and end should return the same type.");
+  }
+\end{verbatim}

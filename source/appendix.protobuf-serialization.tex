@@ -10,7 +10,7 @@ serializes it to an output stream.
 // this we leverage the normal C++ static rules for inheritance
 // and polymorphism.
 namespace proto {
-  bool serialize(Message %m, std::ostream &os) {
+  bool serialize(rich_ptr<Message> m, std::ostream &os) {
     // In here we can then inspect the type associated with the pointer m
     // reflecting the runtime representation.
     type_descriptor_t const *type = type_descriptor(m),
@@ -48,7 +48,7 @@ namespace proto {
    public:
     virtual bool get_member(std::string const &name, std::string *buffer) {
       type_descriptor_t const *type =
-          registry[type_descriptor(rich_cast<Message%>(this))->name];
+          registry[type_descriptor(rich_cast<Message>(this))->name];
       bool ok = false;
       size_t offset = 0;
       field_descriptor_t const * field = nullptr;
