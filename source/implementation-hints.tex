@@ -84,9 +84,14 @@ With a library-only implementation we also cannot do the following reliably:
 
 \end{itemize}
 
-A previous version of this paper (N3340) was proposing to add a new pointer type. The downside to that approach would be that the work required to change the standard defining a new pointer type is not enough to justify the gains.
+A previous version of this paper (N3340) was proposing to add a new pointer
+type. The downside to that approach would be that the work required to change
+the standard defining a new pointer type is not enough to justify the gains.
 
-This version of the paper introduces a hybrid approach which shows what rich pointers would look like with a library interface (\verb+rich_ptr+) while introducing some compiler assistance functionality (\verb+type_descriptor+ and \verb+metadata+).
+This version of the paper introduces a hybrid approach which shows what rich
+pointers would look like with a library interface (\verb+rich_ptr+) while
+introducing some compiler assistance functionality (\verb+type_descriptor+ and
+\verb+metadata+).
 
 \subsection{Library Interface + Compiler Assist}
 
@@ -144,9 +149,13 @@ type. A whole family of traits associated to the handle type are also defined.
 
 \subsection{Metaprogramming}
 
-This paper relies on the current state of the art of using template metaprogramming to provide the interface for the traits that can be applied to the metadata handle. Unfortunately this interface is severely limited. One potential way to alleviate the need for template metaprogramming is to extend constexpr functions to support pure constexpr functions.
+This paper relies on the current state of the art of using template
+metaprogramming to provide the interface for the traits that can be applied to
+the metadata handle. Unfortunately this interface is severely limited. One
+potential way to alleviate the need for template metaprogramming is to extend
+\verb+constexpr+ functions to support pure \verb+constexpr+ functions.
 
-With pure constexpr functions:
+With pure \verb+constexpr+ functions:
 
 \begin{itemize}
 
@@ -156,11 +165,13 @@ With pure constexpr functions:
 
   \item Implement generative type functions.
 
-  \item Treat literals as first class objects when performing type-system checks (e.g. compare string equivalence per translation unit).
+  \item Treat literals as first class objects when performing type-system
+  checks (e.g. compare string equivalence per translation unit).
 
 \end{itemize}
 
-Although pure constexpr functions will make metaprogramming easier, it is not a necessity in providing the rich pointer functionality.
+Although pure \verb+constexpr+ functions will make metaprogramming easier, it
+is not a necessity in providing the rich pointer functionality.
 
 \subsection{Inhibiting Type Descriptor Generation}
 
@@ -185,4 +196,5 @@ how some implementations actually enable/disable RTTI or exception support.
 
 \end{itemize}
 
-Of the three above the preferred solution is to define an opt-out mechanism using type annotations.
+Of the three above the preferred solution is to define an opt-out mechanism
+using type annotations.
