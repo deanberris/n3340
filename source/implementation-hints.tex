@@ -6,44 +6,49 @@ that approximates the functionality using available language features in
 C++11. We then show what the limitations of the language and runtime are along
 the way and work towards removing the limitations.
 
-\subsection{Library Components}
-
 Here we present a first crack at providing rich pointer support using a
-template we'll call \verb+rich_ptr+. The goal of \verb+rich_ptr+ is to provide
-functionality for the definition and registration of types and objects of
-these types in the same object. Instances of \verb+rich_ptr+ will follow
+template we''ll call \verb+rich_ptr+. The goal of \verb+rich_ptr+ is to
+provide functionality for the definition and registration of types and objects
+of these types in the same object. Instances of \verb+rich_ptr+ will follow
 pointer semantics similar to what \verb+shared_ptr+ provides without the
 reference counting capability.
 
 In \autoref{appendix:rich_ptr-interface} we show what the interface for a
 \verb+rich_ptr+ would look like. The minimal interface is by design meant to
-mimic how pointers work. There are no special member functions except for
-overloads to the dereference operator and the member access operator.
+mimic how pointers work. It provides overloads to the dereference operator and
+the member access operator, and a member function \verb+rich_ptr::get()+ which
+returns the bare underlying pointer.
 
 We then supply a means to programmatically defining type descriptors following
-the already presented type descriptors by hand.
-\autoref{appendix:rich_ptr-annotations} shows how these macros would look like
-and what their intended semantics are.
+the already presented type descriptors by hand in an attempt at a library-only
+approach.
 
-\subsubsection{Limitations}
+\subsection{Library-Only Approach}
 
-There are a few problems in the library-only approach:
+Is there a way to implement support for rich pointers using just C++11
+features? We explore how this would look like in
+\autoref{appendix:rich_ptr-annotations} which shows how this could be done
+with macros. Immediately there are a few limitations which we can identify:
 
 \begin{itemize}
 
- \item The syntax of the macros is very explicit and too verbose and deviates
-too much from the normal C++ syntax for class definitions.
+ \item Without compiler assistance, users will have to annotate types that
+they want to generate metadata for with preprocessor macros. The syntax of the
+macros typically deviates too much from the normal C++ syntax for class
+definitions.
 
  \item Because you have to consciously annotate the type you’re registering,
 this makes it hard to manage especially if the type’s definition is not
 something you can change (i.e. when using a third-party provided library).
 
  \item This will not properly handle dynamically loaded libraries at runtime
-and will be at the mercy of the implementation and platform.
+and will be at the mercy of the implementation and platform. Because
+preprocessor macros are typically only valid very early on in the compilation
+process, the annotations are no longer available in the translation unit.
 
 \end{itemize}
 
-With a library-only implementation we cannot do the following reliably:
+With a library-only implementation we also cannot do the following reliably:
 
 \begin{itemize}
 
@@ -83,27 +88,101 @@ A previous version of this paper (N3340) was proposing to add a new pointer type
 
 This version of the paper introduces a hybrid approach which shows what rich pointers would look like with a library interface (\verb+rich_ptr+) while introducing some compiler assistance functionality (\verb+type_descriptor+ and \verb+metadata+).
 
+\subsection{Library Interface + Compiler Assist}
+
+The library interface reduces the reliance on changes to the C++ language and
+allows alternate implementations. There are a number of parts to the library
+implementation that are implementation-defined:
+
+\begin{itemize}
+
+ \item Runtime registration/lookup of type descriptors.
+
+ \item Invalidation of type descriptors.
+
+ \item The actual storage mechanism for the handle to a type descriptor for
+each instance of a \verb+rich_ptr+.
+
+ \item How type-lists are implemented in the case of \verb+metadata+ and
+associated types.
+
+\end{itemize}
+
+Please refer to \autoref{appendix:rich_ptr-interface} for all the details of
+the proposed \verb+rich_ptr+ type.
+
+The reason for implementation-defined runtime registration/lookup
+implementations is a consequence of the reality where different platforms
+provide different implementations of dynamic linkage. Without a standardized
+facility for defining shared libraries or shared objects there's no choice but
+to leave out these specifications to be defined by the implementation. The
+same reasoning applies to invalidation of type descriptors.
+
+One approach to the mapping between a pointer and a type descriptor in the
+face of invalidation at runtime is to have a token representing an
+intermediate mapping. This allows an implementation to provide two-stage
+lookup and to maintain a single definition of valid type descriptors in a
+globally accessible map.
+
+An implementation is also allowed to tag objects in memory (similar to how
+RTTI is done) to encode the token to the object. Some compilers already encode
+debugging information as part of the translation unit -- this metadata can be
+used at runtime as well in debug builds. Other implementation approaches for
+runtime introspection are possible and the paper tries not to preclude
+potentially valid implementations.
+
 \subsection{Compiler Assist}
 
-There are two main parts where compiler assistance comes in: automatic generation of type descriptors, and static metadata. The \verb+metadata+ metafunction yields a compiler-generated type that acts as a handle to a type's definition. This same metadata is meant to be consistent with the runtime type descriptors.
+There are two main parts where compiler assistance comes in: automatic
+generation of type descriptors, and static metadata. The \verb+metadata+
+metafunction yields a compiler-generated type that acts as a handle to a
+type's definition. This same metadata is meant to be consistent with the
+runtime type descriptors.
+
+The handle is implementation-defined and is not required to be a valid C++
+type. A whole family of traits associated to the handle type are also defined.
+
+\subsection{Metaprogramming}
+
+This paper relies on the current state of the art of using template metaprogramming to provide the interface for the traits that can be applied to the metadata handle. Unfortunately this interface is severely limited. One potential way to alleviate the need for template metaprogramming is to extend constexpr functions to support pure constexpr functions.
+
+With pure constexpr functions:
+
+\begin{itemize}
+
+  \item We can define functions which have absolutely no runtime side-effects.
+
+  \item We can use imperative control structures that operate at compile time.
+
+  \item Implement generative type functions.
+
+  \item Treat literals as first class objects when performing type-system checks (e.g. compare string equivalence per translation unit).
+
+\end{itemize}
+
+Although pure constexpr functions will make metaprogramming easier, it is not a necessity in providing the rich pointer functionality.
 
 \subsection{Inhibiting Type Descriptor Generation}
 
-In the Kona meeting questions were raised about whether it should be possible to inhibit type descriptor generation. There are a number of approaches that can be taken for type descriptor generation:
+An the Kona meeting questions were raised about whether it should be possible
+to inhibit type descriptor generation. There are a number of approaches that
+can be taken for type descriptor generation:
 
 \begin{itemize}
-  \item \textbf{Default inhibit, annotate for generation (opt-in generation).} This
-  is the conservative approach. This makes it really hard to get the utility to be
-  useful to as many people as possible when implementations get around to supporting 
-  the proposed facilities.
-  
-  \item \textbf{Default generate, annotate for exclusion (opt-out generation).} This
-  is the aggressive approach which would turn it on for all types except for certain
-  types. The suggestion is to have this be controlled by type annotations which
-  should be supported by implementations.
-  
-  \item \textbf{Implementation defined.} This could be made optional similar to how
-  some implementations actually enable/disable RTTI or exception support.
+
+ \item \textbf{Default inhibit, annotate for generation (opt-in generation).}
+This is the conservative approach. This makes it really hard to get the
+utility to be useful to as many people as possible when implementations get
+around to supporting the proposed facilities.
+
+ \item \textbf{Default generate, annotate for exclusion (opt-out generation).}
+This is the aggressive approach which would turn it on for all types except
+for certain types. The suggestion is to have this be controlled by type
+annotations which should be supported by implementations.
+
+ \item \textbf{Implementation defined.} This could be made optional similar to
+how some implementations actually enable/disable RTTI or exception support.
+
 \end{itemize}
 
 Of the three above the preferred solution is to define an opt-out mechanism using type annotations.
