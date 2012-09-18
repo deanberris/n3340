@@ -1,0 +1,214 @@
+\subsection{Objective-C}
+%-   Intro                       
+%  -   Influence                     
+%  -   History                     
+%  -   Intent                      
+%  -   Features            
+	Objective--C\cite{objc} is a SmallTalk--derived object--oriented layer added to standard C.  Originally developed by Brad Cox and the StepStone Corporation\cite{dekorte}, it was licensed by NeXT and then reimplemented by Dennis Glatting, Richard Stallman, and Kresten Krab Thorup.  The last implementation has been the official GNU runtime since 1993\cite{dekorte}.  Currently, it's used as the vendor--preferred API for new application development on Mac OS X.  The primary compiler is the Free Software Foundation GNU Compiler Collection (GCC).
+
+	Objective--C provides a dynamic runtime environment running on the native processor; no virtual machine is used.  Although there is no garbage collection, reference counting is built into the libraries, and the burden on the programmer is minimal to interoperate with it.  Furthermore, the runtime provides interesting functionality, such as the ability to extend a class at compile, link, or run time.  Finally, the runtime interacts with the client code to enable additional capabilities, discussed later.
+
+	Objective--C has been used for years for next--generation systems like NeXTStep and WebObjects, and has always enjoyed good tool support.  Apple provides almost all support for Objective--C today.  The APIs have changed names, from an \texttt{NX} prefix to \texttt{NS}.  Today, both GNUStep\cite{gnustep} and Apple's implementations use the new prefix.
+
+\subsubsection{Compilation}	
+%-   Compilation                   
+%  -   Compilation process               
+%  -   Preprocessing stages                
+%  -   input & output                    
+%  -   archives & libraries                  
+%  -   application management                
+
+	Objective--C compiles like C or C++: a set of source files (with the \texttt{.m} suffix) are compiled to object files.  The source and object files have no required naming relation to the code within.  The compiler stores additional class metadata describing the methods, members, and layout of the aggregates defined.
+
+	The code first goes through a preprocessor like C.  The Objective--C preprocessor is nearly identical to C's, except for an additional \texttt{\#import} directive, which works like \texttt{\#include} with built--in multiple include guards.
+
+	Ex\-ec\-ut\-abl\-es generated from Obj\-ect\-ive--C are traditional in nature; \texttt{ELF}, \texttt{COFF}, and \texttt{Mach-O} are supported in modern toolchains.  NeXTStep and Mac OS X package executables into directories called bundles, which are treated as a single file within the user interface.
+
+	Like executables, libraries are also generated like any other on the platform: \texttt{DLL}, \texttt{.so}, or \texttt{.dylib}.  NeXTStep and Mac OS X package libraries into directories called frameworks, again treated as single files within the user interface.  Application bundles and frameworks can contain each other as needed.
+
+	While Objective--C provides no direct application management infrastructure, its cohorts NeXTStep and Mac OS X, through their bundling and framework mechanisms, allow drag \& drop application installation and removal.
+
+\subsubsection{Syntax}
+	Objective--C's syntax is essentially C with a modified version of SmallTalk put on top.  Like C++, a header file declares the type's messages and members.  The keyword \texttt{@interface} specifies the name of the type, its supertype, and any protocols it implements.
+
+	The primitive types are 100\% C.  Instances of objects aren't allowed on the stack, only pointers.  All of C's declaration syntax is supported, and pointers to objects are declared as they would be in C++.  Objective--C also supports typeless object types called \texttt{id}.  It's actually a typedef to \texttt{void*}, but is allowable everywhere an object pointer would otherwise be required.
+
+	The syntax for loops, conditionals, and free functions is identical to C.  This allows conditionals to check pointer values directly, without a redundant \texttt{==0} like Java.  Even though free function definitions and calls to them are identical to C, message sending and method definition is very different.  Those are based on SmallTalk.
+
+%-   Syntax                      
+%  -   Overview                      
+%  -   Procedural syntax                 
+%  -   Declarations                    
+%  -   Conditionals                    
+%  -   Loops                     
+%  -   Procedure calls                 
+
+\subsubsection{Type System}
+	As mentioned earlier, all of C's primitives are supported.  Structures are also supported.  Wrappers for them exist, although fewer in number than Java.  \texttt{NSNumber} covers all numeric types.  \texttt{NSString} and \texttt{NSMutableString} cover strings.  Through them, one can put primitive types inside containers and use them as regular objects.
+
+	  Beyond that, Objective--C has two interrelated constructs, the \texttt{@interface} and the \texttt{@impl\-em\--ent\-at\-ion}.  The former declares the members and the list of methods visible to clients.  The latter contains all the method implementations.  Note that additional methods can be defined in the \texttt{@implementation}, which will be added to the method list as any other.  These additional methods can be called by any client due to the dynamic messaging system.
+
+	C's arrays are immediately available.  Furthermore, \texttt{NSArr\-ay} and \texttt{NSM\-ut\-ab\-le\-Arr\-ay} provide object wrappers around fixed arrays.  Objective--C's containers all provide useful abstractions upon all their contents, and these two types enable them for arrays.  Arrays of arrays are allowed in C's traditional arrays and in Objective--C.  \texttt{NSArr\-ay} and \texttt{NSM\-ut\-ab\-le\-Arr\-ay} allow them as well by recursive embedding.
+
+% Type Safety/Checking
+	Objective--C's can operate with weak or semi--weak type checking.  The original libraries and runtime use the type \texttt{id} to refer to any object.  Any message could be sent to it, and any type is convertible to \texttt{id}.  Internally, \texttt{id} is a \texttt{typedef} to \texttt{void*}.  However, users complained about the lack of static error checking, so some basic capabilities were added.
+
+	A pointer can be declared to any \texttt{@interface}, and messages sent to that pointer are checked against the \texttt{@interface}'s declared API (not the set of messages the \texttt{@implementation} defines).  Any messages sent to the object, but not declared by its API, are flagged as warnings by the compiler.  Because the object could easily respond to many more messages than it declares, a compilation--stopping error would be inappropriate.
+
+	For primitive types, the type checking is exactly the same as standard C.  Traditional \texttt{(type)} casts easily remove any hindrances provided by the type system.
+
+% Object Model
+	Objective--C's object model is modeled after SmallTalk.  Only single inheritance is supported, but with two other important features: categories and protocols.
+
+	Categories were originally designed to let developers split up the \texttt{@impl\-em\-ent\-at\-ion}s of types across several source files.  They allow additional methods to be added to an existing type.  Furthermore, a category's implementation of a method will \emph{override} the original.  Note that this isn't the same as overriding a method through inheritance; the category's methods are part of the original type.  The overridden method is never used. If two or more categories implement the same method, then the selection of the method implementation that runs depends upon the load order of the categories' respective object definitions at run--time.
+
+	Protocols work essentially like \texttt{interface}s in Java: a set of methods that are declared but undefined.  Classes declare their conformance to one or more protocols and implement their methods.  Due to the fairly untyped nature of Objective--C, the actual declaration of conformance is mostly for documentation reasons.  Just as often as protocols are used, classes will declare \emph{informal protocols}.  Informal protocols exist only in documentation as a set of methods a class may choose to implement.  Objective--C's runtime allows a class's implemented method list to be checked, so a client can see if it implements a method from an informal protocol before sending it the appropriate message.
+
+	At the heart of Objective--C's runtime is the \texttt{Class}.  The \texttt{Class} contains the full description of a class: its superclass, name, version, size, instance variables, method list, and conformed protocols.  The \texttt{Class} is a \texttt{typedef} to \texttt{struct objc\_class*}, a C structure.  While the definition of \texttt{objc\_class} is available through the header files, several C and Objective--C functions and methods are available to the programmer for abstracted access.
+
+% - Messaging
+	The \texttt{Class} contains the list of methods implemented by the type.  All method names are hashed to an opaque \texttt{struct objc\_selector*}, generally just called a \emph{selector}.  
+
+	Every instance of the same name, no matter which interface or implementation it exists in, is hashed to the same value.  This way, message names have no binding to any particular class.  Using this property, one can send any message to any type.
+
+	Upon compilation, the compiler links to the runtime in two ways.  First, the \texttt{Class} structures are all defined and filled. Second, every message send has the method name converted to a selector, and then passed to the runtime function \texttt{objc\_msgSend}.  
+
+	\texttt{objc\_msgSend} searches the recipient's method list for the selector, and dereferences the listed pointer to the proper code.  The method list is actually a hash table for speed.  If the object doesn't implement the method, all of its ancestors are searched.  If none of them implement it, then it sends a ``second chance" invocation, by sending \texttt{forwardInvocation:} to the original recipient.
+
+	\texttt{forwardInvocation:} allows an object to handle any message it wants.  The name implies the most common use for this feature: to let an object act as a proxy for another.  An object can implement \texttt{forwardInvocation:} as a quick check upon its proxied object to see if it responds to the parameter, and if so, sends the message onwards.  \texttt{forwardInvocation:} has a default implementation in the root class \texttt{NSObject} that throws an exception and logs the failed message call.
+
+% - Overloading
+	Objective--C doesn't provide any type of parameter overloading at all.  In fact, parameter checking isn't a strong feature at all in Objective--C.  Only when the optional static type checking features are used can parameter checks be done at all.
+
+	A message is dispatched upon its selector, which is based only on the message name.  When static type checking isn't used, the return type is assumed by the runtime to be of type \texttt{id}.  Any client sending a message to a type that returns anything else has to cast the value.
+
+	As mentioned earlier, a form of overloading occurs with categories that define methods with the same name as one in the original type.  This is a dangerous practice, as another category could do the same and ambiguate the selection process.
+
+% Operators
+	No operator overloading is provided in Objective--C.
+	
+% Access Control	
+	Objective--C only allows access control upon members.  Although one can ``hide" methods by defining them in the \texttt{@implementation} without declaration in the \texttt{@interface}, instances will still respond to messages of that name from any sender.
+
+	Members can still be \texttt{@public}, \texttt{@protected}, or \texttt{@private}.  The syntax for accessing them is identical to accessing a structure member via a pointer.  For further control, the traditional C methods of defining pointers to undefined (such as \texttt{objc\_selector}) or unlisted types (\texttt{void*}) are still useful.  
+
+% Inheritance
+	As mentioned earlier, Objective--C allows a type to inherit from one other.  All the member variables and methods are inherited.  \texttt{@private} members are part of the subclass's definition but are inaccessible.  All methods are inherited and accessible.  Any method can be overridden, as there is no concept of a \texttt{final} or non-virtual method in Objective--C.
+
+	While upcasting is directly allowed, it's not very useful.  C allows arbitrary casting and Objective--C doesn't really need a type's name to send it a message.  Except for cases of voluntary static type checking, inheritance in Objective--C is essentially useful as implementation inheritance only.
+
+% Polymorphism
+	Objective--C provides the most flexible polymorphism of any language described here. It has a binding mechanism much more dynamic than most OO languages.  Furthermore, it allows the \emph{client} much more control over an object's behavior than most other languages: categories and dynamic message proxies let the client modify the interface and behavior of the type.  Only \texttt{@private} data members aren't accessible to client code via subclassing or categorization.
+
+% Exceptions
+	Exceptions only appeared in their current form in Apple's compiler in Mac OS X 10.3.  An earlier form existed that was based on macros, but it won't be described here.  The current syntax is very similar to C++: a \texttt{@try} block encloses code that may \texttt{@throw}, followed by one or more \texttt{@catch} blocks, each with a typed parameter.  Like Java, an optional \texttt{@finally} block can follow, with code that will always be run.
+
+	Only subclasses of \texttt{NSException} may be thrown.  The \texttt{@throw} construct begins a scan and unwind process on the stack for a \texttt{@catch} block that will handle the exception type or one of its ancestors.  Any \texttt{@finally} blocks are run along the way.
+
+% Generics
+	Objective---C doesn't have a compile--time generics system.  Its dynamic messaging system helps mitigate the loss.  For example, the library containers all support the method \texttt{makeObjectsPerformSelector:}, which sends a message with the parameter selector to every contained element.  Furthermore, the weak and optional static typing mechanism reduces the value of a generics facility at all.
+
+%-   Type System                   
+%  -   Primitive Type Handling (integer, Integer, etc)       
+%  -   Arrays                      
+%  -   Type Safety/Checking                
+%  -   Object Model                    
+%  -   Messaging                   
+%  -   Overloading                   
+%  -   Operators                     
+%  -   Access Control                    
+%  -   Inheritance                   
+%  -   Polymorphism                    
+%  -   Exceptions                    
+%  -   Generics 
+
+\subsubsection{Runtime}
+	As covered earlier, the runtime plays a large part of the Objective--C system.  At startup, all the loaded classes' \texttt{Class} descriptions are initialized.  From there, the standard C entry point \texttt{main} is run.  
+
+% Memory management
+	Memory is best described as ``semiautomatic."  Its inherently reference--counted, with the appropriate support infrastructure directly within \texttt{NSObject}.  Two methods, \texttt{retain} and \texttt{release}, increase and decrease a reference count in the recipient object.  When that count reaches zero, the object calls \texttt{dealloc} on itself, and releases any resources it holds.  \texttt{dealloc} will then call \texttt{release} on any member objects it has, causing the proper cascading effect.
+
+	For additional functionality, Obj\-ect\-ive--C supports an \texttt{aut\-or\-el\-ease} message.  \texttt{autorelease} will add the receiver to the current autorelease pool, an instance of \texttt{NSAutoreleasePool}, a container.  \texttt{NSAutoreleasePool} takes ownership of the object.  When the pool is itself \texttt{release}ed, it will call \texttt{release} on all of its contents.
+
+	\texttt{NSAutoreleasePool}s can be nested within each other, and are automatically supported by the GUI library in Objective--C, \texttt{AppKit} (now called Cocoa\cite{cocoa}).  The most common use is within the event loop: an autorelease pool is created when an event enters the application, and \texttt{release}ed when the event loop reenters it waiting state.  In the meantime, any \texttt{autorelease}d object will have a convenient lifetime that lasts just long enough to be used for handling the event.  Any object that needs to live longer can be \texttt{retain}ed by any other object, which will hold the only reference count to it when the event loop reenters the waiting state.
+
+% Libraries
+	While not as large as Java's, Objective--C's library is certainly quite powerful.   More importantly, it's much more flexible thanks to good leverage of the runtime's dynamism.  For example, the serialization mechanism directly allows connections between objects to be serialized easily, allowing a GUI builder to directly connect data objects to GUI components without necessitating the generation of code or other glue.  Furthermore, serialization works for nontree structures, thanks the the runtime's ability to directly analyze the objects.
+
+	Of particular interest in the library is the single--threaded nature of it all.  The entire system was designed to run within a single thread, with a messaging bridge to connect threads together.  The messaging bridge works exactly the same as a full interprocess communication system, in fact identically to its distributed objects mechanism.  That will be described below.
+
+% Introspection
+	Most of the runtime's abilities come from two places: the messaging system and functionality built into \texttt{NSObject}.  \texttt{NSObject} provides the following APIs:
+
+\begin{enumerate}
+	\item \texttt{conformsToProtocol:} --- If the object exports a specific protocol's API.
+	\item \texttt{respondsToSelector:} --- If the object responds to a specific method.
+	\item \texttt{isKindOfClasss:} --- If the object has a specific class as its type or in its type inheritance hierarchy.
+	\item \texttt{isMemberOfClass:} --- If the object is of a specific type.
+\end{enumerate}
+
+	These methods constitute around 90\% of what's needed by most applications.  The remainder go and directly analyze the \texttt{objc\_class} structure for more information.  For the most part, the dynamic messaging infrastructure and weak typing reduce the need for direct introspection in the system.
+
+
+%-   Runtime                     
+%  -   Startup                     
+%  -   Memory Management               
+%  -   Libraries                     
+%  -   Introspection                   
+
+%-------------------------------------------------------------------------------
+	% Intro
+%	Objective--C is a simple language atop of standard C.  The language depends heavily upon its runtime for basic operation.  Furthermore, it's got an extensive library providing much functionality, as we'll see below.
+%
+%% Compilation Model 
+%\subsection{Compilation}	
+%	The language is very simple.  Atop of C, Objective--C has three basic concepts: interfaces, implementations, and protocols.  The first two are the declaration and definitions of classes, and the last is an abstract interface.  All three depend upon the messaging mechanism within Objective--C.  The mechanism has three stages:
+%\begin{enumerate}
+%	\item \emph{Register} the method names into a table, providing simple integer equivalents called \emph{selectors}.
+%	\item \emph{Generate} instances of type \texttt{Class} for every implementation, with a table that maps selectors to pointers to the implementing code.
+%	\item \emph{Convert} method calls to the runtime function \texttt{objc\_msgSend}
+%\end{enumerate}
+%
+%	\texttt{objc\_msgSend} searches through the tables, finds the implementing code, calls it, and returns the result to its own caller.  The dynamism behind every method call gives Objective--C some strong capabilities.
+%	
+%	\texttt{objc\_msgSend} interacts with the recipient to help route the message.  If the selector isn't in its map, it iteratively searches through the superclasses until it's found.  If it can't find it, it'll reroute the message to standard methods every instance has.  These methods can then attempt to route the message themselves.  If none of these work, a warning message is printed at run time.  If the selector is in the map, the object is said to respond to that selector.
+%
+%	The compiler attempts some error checking by providing warnings if the recipient object's type doesn't declare handling the message.
+%
+%	% Introspective Abilities
+%	% 
+%	\subsection{Introspective Abilities}
+%	
+%	Along with message routing, every object exports some basic introspective methods.  These methods indicate:
+%\begin{enumerate}
+%\item \texttt{conformsToProtocol:} --- If the object exports a specific protocol's API.
+%\item \texttt{respondsToSelector:} --- If the object responds to a specific method.
+%\item \texttt{isKindOfClasss:} --- If the object has a specific class as its type or in its type inheritance hierarchy.
+%\item \texttt{isMemberOfClass:} --- If the object is of a specific type.
+%\end{enumerate}
+%
+%	Note that it isn't possible to iterate over all the methods in the type.  Objective--C has two types of protocols: \emph{formal} and \emph{informal}.  The former is a type on its own that can't be directly instanciated.  However, other types can declare that they implement the protocol, letting the compiler test for conformance.   The latter is a set of methods in the implementor that have the same names and parameters as the protocol.  The compiler doesn't check for any conformance at all; instead, a client to an object of this type ask it if it implements each method as needed.
+%
+%	Informal protocols are used most often for optional methods; for example, in delegates or event handlers.  In these cases, the methods are callbacks to notify the recipient of specific events, or to allow them to modify an otherwise normal execution flow.  When the recipient doesn't implement the method, the caller understands it to mean that the recipient doesn't care about the event or doesn't want to alter the normal flow.
+%
+%	Unlike OpenC++, Objective--C doesn't provide any mechanism for a type to learn about the context in which it's used.  OpenC++ allowed a metaclass to learn about and modify any method call or member access; no such access is given in Objective--C.
+%
+%	%
+% USES: Distributing Objects
+	\subsubsection{Case Study: Distributed Objects}
+	There need not be any ``what if" scenarios here; Objective--C's basic runtime libraries provide distributed object (DO) functionality.  In fact, this functionality's used for more than interprocess communication; Objective--C uses its DO mechanism for inter-thread communications; avoiding the traditional complexities of synchronization.
+
+	The distributed object system works quite simply: a generic proxy class for the transport mechanism masquerades as the type it's proxying.  The proxy tells its clients that it responds to all the selectors of its destination.  Any messages sent to it are serialized and sent through the transport to the recipient.  The system is so simple because of both the flexible messaging system and the built--in serialization system.
+
+	The serialization of messages is significant; such a serialized form could be replicated, replayed, or even analyzed and restructured.  For a DO system, another question arises, when should a parameter be serialized and when should it be proxied?  If the parameter is a simple, flat data structure, it can and should be serialized.  However, if it's a complex object with relationships to other objects, it should be proxied.  Serializing and restoring such an object will certainly be complex, possibly lossy.  Such a determination also can't be made by the compiler; these are design--level decisions.  
+
+	For that reason, additional keywords exist in Objective--C to tag parameters that should be proxied.  The terms \texttt{byref} and \texttt{bycopy} indicate which parameters are sent by reference and copy, respectively
+
+	\subsubsection{Case Study: Serialization}
+	Serialization is built into Objective--C as well; it's a prerequisite for marshaling a message.  There are two parts to serialization: wrappers for each primitive type and a protocol for serialization.  The latter, \texttt{NSCoding} lets serializing objects interoperate and cooperate for more complex types.  The wrappers implement the protocol and take most of the grunt work out of serialization.  
+
+	As Objective--C doesn't allow the iteration of an object's members, there is no support for automating the serialization process of a complex type; some code has to be written.  In practice, the process is often much simpler than it sounds.  Objective--C's runtime library is full of high--quality containers that will serialize themselves and all their contents.  Often, it's advantageous to use one or two containers instead of many members; letting them do most of the serialization work.
+
+%
+%
+%
