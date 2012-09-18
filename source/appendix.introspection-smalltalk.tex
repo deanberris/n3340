@@ -1,0 +1,102 @@
+\subsection{SmallTalk}
+%+   Intro                       
+%  -   Influence                     
+%  -   History                     
+%  -   Intent                      
+%  -   Features                      
+	SmallTalk derives from Simula and Lisp.  Originally developed at the Xerox Palo Alto Research Center in 1972, it did not leave the lab until 8 years later as SmallTalk-80. %  Designed for children aged 10 and above\cite{dev.smalltalk.org/zoku}, 
+	It's based upon the idea that everything is an object, and that all objects communicate via messages.
+
+	Simple constructs, like code blocks, integers, strings, conditionals, and looping, are library objects.  Through extensive reuse and inheritance, it's easy to leverage the extensive and highly--integrated existing library objects.  
+
+\subsubsection{Compilation}
+	SmallTalk comes in more than just a compiler, it's an entire environment.  When source text is compiled, the resulting objects are inserted into the environment, ready for immediate use.  For specifics, we'll discuss the specifics of one particular SmallTalk environment, Squeak \cite{squeak}.
+
+	The environment is saved and restored from an image file, that's bit--for--bit identical across platforms.  An application in Squeak is a set of object instances in the environment.  More can be instantiated as needed.
+
+	More than one image can be loaded at a time and objects can be moved and copied between them.%\footnote{Completely guessing here}.  
+Applications are packaged as images that are copied into new environments as needed.  Once copied, they are part of the new environment, and as such, can be invoked as if they were a built--in feature of that environment.
+%+   Compilation                   
+%  -   Compilation process               
+%  -   Preprocessing stages                
+%  -   input & output                    
+%  -   archives & libraries                  
+%  -   application management                
+
+\subsubsection{Syntax}
+	SmallTalk's syntax is very simple: a way of specifying messages sent to objects.  Such message send actions can be grouped together into blocks, which themselves can respond to messages.  The syntax specifies three ways to send messages to objects: unary, binary, and keyword.
+
+	Unary messages have a simple format: \emph{recipient} \texttt{message}.  The recipient indicates which object to be sent the message, and the latter is the message to be sent.  Binary messages are almost as simple: \emph{recipient} \emph{message} \emph{parameter}.  The first two are the same as before, but the last value, the parameter, is given with the message to the recipient.
+
+	Keyword messages are similar to method invocations in Java or C++.  The syntax is similar to the others: \emph{recipient} [\emph{namesegment:} \emph{parameter}]+.  The message would have a name like \texttt{setMax:min:}, with parameters following each of the colons.
+
+	To force precedence, parenthesis are used.  These are necessary to send messages to objects returned from other messages.  For example: \texttt{array at:1 set:5.} would send the message \texttt{at:set:} to \texttt{array}, while \texttt{(array at:1) set:5.} would send the message \texttt{at:} to \texttt{array}, and the object returned would then receive the message \texttt{set:}.
+
+	Variables have no static type in SmallTalk.  Variables are all references to objects, and all objects are typed.  Without static type, variable declarations are simply statements of their name in the proper contexts, such as member, variable, and parameter declarations.
+
+	Conditionals are very simple: relational operators return objects of type \texttt{Boolean}, which has the method \texttt{ifTrue:ifFalse:}.  It takes two parameters, code blocks that run, depending on the value of the boolean value.  Loops work similarly: a block of code is an object that has a method called \texttt{whileTrue:}, which takes a block as a parameter.  That parameter block is run repeatedly as long as the block's code results in \texttt{true}.
+
+	%One can create toplevel procedures in SmallTalk by creating \texttt{BlockClosure} objects (blocks of code), and assigning them to names.  Then those variables can be sent the \texttt{value:} message later to evaluate them.
+	
+%+   Syntax                      
+%  -   Overview                      
+%  +   Procedural syntax                 
+%    -   Declarations                    
+%    -   Conditionals                    
+%    -   Loops                     
+%    -   Procedure calls                 
+
+\subsubsection{Type System}
+	All data are within objects.  Arithmetic types are thus also objects, which implement methods for mathematical operations.  Precedence for operations is very simple: left to right, except for parenthesis. 
+
+	There is no ``native" array concept in SmallTalk\cite{567553}; instead, a \texttt{Array} object exists, that uses methods \texttt{at:} and \texttt{at:put:} to read and write its values.  Two dimensional arrays are implemented with class \texttt{TwoDArray}, and higher dimensions are only possible with embedding \texttt{Array}s within each other.
+
+	As SmallTalk doesn't give type to its variables or method parameters, no static type checking can be performed.  Only when an object receives a message it doesn't implement or a method throws an exception is an error flagged.  In fact, the former will actually just throw an exception of type \texttt{doesNotUnderstand} .
+
+	
+%+   Type System                   
+%  -   Primitive Type Handling (integer, Integer, etc)       
+%  -   Arrays                      
+%  -   Type Safety/Checking                
+
+\subsubsection{Object Model}
+
+	Objects have a type, members, and methods.  The type is another object by itself, called the \emph{Class Object}\footnote{\cite{74921} extended this concept further into \emph{explicit metaclasses}\cite{74911}, resulting in the Classtalk platform}, referred to by a global variable with the type's name.  To subclass a type, send that type's class object a \texttt{subclass:\-instance\-Variable\-Names:\-class\-Variable\-Names:\-pool\-Dictionaries:\-category:} message, which creates a new class object with the added instance, class, and pool variables.
+
+	To construct an instance, call \texttt{new} on the class object.  The return value is a new instance, which can then be used as necessary.  A garbage collector will automatically destroy any unused instances lying around.
+
+	Operators are methods themselves, with non--alphanumeric names.  The expression $1 + 2$ leads to the instance of \texttt{Integer} for $1$ receiving the message \texttt{+} with a parameter of the instance of \texttt{Integer} for $2$.
+
+	There isn't a heavily--enforced access control mechanism like in C++ or Java.  Instead, methods are placed into named categories, and some categories have the prefix \texttt{private}, which the runtime and compiler do not treat specially.  The prefix \texttt{private} simply means that the interfaces and implementations may change in a later version, so it's best not to use them.
+
+	Inheritance and polymorphism exist in SmallTalk.  Single inheritance only\cite{802792}, without the concept of formal interfaces as in Java\footnote{Without typed variables, such a mechanism would not be useful anyways}.  Polymorphism is ubiquitous; to override a method, simply define it in the subclass.  There is no special keyword to mark a method as overridable like \texttt{virtual} in C++, nor is there a method to prevent override like \texttt{final} in Java.  Without access control or specially marked polymorphic members in SmallTalk, the language presents no obstacle to arbitrary changes of a type through subclassing.
+
+	
+%	SmallTalk does have some exception support, but it's almost .  XXX Research this and fill in, there's lots of differing data on this.  Perhaps SmallTalk-80's support was weak and has been augmented by vendors?
+
+	SmallTalk has no support for generics.  As variables are untyped, it's understandable to avoid the issue.
+	
+	
+%  +   Object Model                    
+%    -   Messaging                   
+%    +   Overloading                   
+%      -   Operators                     
+%    -   Access Control                    
+%    -   Inheritance                   
+%    -   Polymorphism                    
+%  -   Exceptions                    
+%  -   Generics             
+
+\subsubsection{Runtime}
+
+	The SmallTalk system is a full environment that contains all objects and interacts with the user.  Programs in SmallTalk exist within \emph{images}, virtual machine memory segments that can be added together.  Objects are fully persisted within the images, and they live until garbage collected.
+
+	The SmallTalk libraries are extensive and easy to use.  The language has a built--in documentation system, where every object and method can have a string associated with them, which can then be browsed.  A programmer can use an object browser to peruse the extensive library of collections, utilities, graphics, and network classes.
+
+	SmallTalk does provide introspective abilities through \texttt{ClassDescription}.  It's possible to retrieve all method names, categories, and members through its APIs.  As there is no access control, all data is available to every client.
+
+%+   Runtime                     
+%  -   Startup                     
+%  -   Memory Management               
+%  -   Libraries                     
+%  -   Introspection                   

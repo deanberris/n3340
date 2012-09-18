@@ -1,0 +1,255 @@
+\subsection{Java}
+%-   Intro                       
+%  -   Influence                     
+%  -   History                     
+%  -   Intent                      
+  Java\cite{java} is a programming language derived from Objective--C and C++.  Developed at Sun Microsystems, it has become extremely popular for World Wide Web applications.  Originally intended as an embedded systems language, one of Java's original goals was platform independence.  That goal has lead to a toolchain and runtime that runs on the vast majority of the worlds' desktop computers and some of the larger embedded platforms.  Linux, Windows, MacOS, Symbian, PalmOS, and many variants of Unix are just a few of the operating systems Java runs on today.  
+
+  Due to its ease of access, strong APIs, and simple programming model, Java has become one of the dominant languages used today.  Java's virtual machine (VM) executes Java Byte Code, an assembly--like language atop of a stack--based virtual processor.  However, the virtual machine has some unusual intelligence to it: specifically that it knows about objects.  Java is thoroughly object--oriented, and that shows in the virtual machine's architecture.
+
+  The virtual machine starts and loads up classes from a \texttt{ClassLoader}, an object responsible for loading class definitions into the system for use.  \texttt{ClassLoader}s can be custom--written and added to the system to work in unison with the default file--based loader, allowing networked access or on--the--fly class generation\cite{javassist}.
+
+  Beyond knowing how to load segments of code in classes, Java's virtual machine has another capability granted from its knowledge of the object model: garbage collection.  The Java language is fully and transparently garbage collected.  Unreferenced objects, even those who keep cycles of references to each other, are properly destroyed and their memory reclaimed during the normal execution of a Java program.
+
+  Modern virtual machines are used in high--load, mission--critical environments.  They have become very solid and their performance has been extensively optimized.  Today's VMs watch for often--used sequences of Java bytecode and compile them into native machine instructions for further optimization.  Also, completely--native compilers exist for Java\cite{GCJ} that eliminate the need for a virtual machine and its overhead.
+
+\subsubsection{Compilation}
+  Before a class can be loaded, it has to be compiled.  Compilation occurs before program execution.  Each class in Java has its own \texttt{.java} file that is compiled into a \texttt{.class} file.  Each \texttt{.java} file can only have one publicly--accessible class in it, defined with the same name as the filename.  All static checks are performed, inside a class and between classes.  Because classes are compiled into separately--loaded files, additional checks are needed at runtime to make sure the file is compatible with the system.
+
+  In general, run--time compatibility errors show up as accesses to undefined or inaccessible members or methods of a class.  These failed access attempts exist as exceptions, which can be caught.  Due to the need to catch these kinds of errors, and other reasons, Java saves a rich amount of information about each compiled class directly within the \texttt{.class} file, which is loaded and maintained by the virtual machine during execution.  Java's introspection mechanism exposes this information to the programmer.
+
+  Even though there isn't a true linking stage within the Java compilation model, there's still a need to distribute single files for entire applications or libraries.  The Java utility \texttt{jar} acts almost exactly like the standard Unix \texttt{tar} utility; only that it uses the \texttt{.zip} file format and stores a manifest file inside the archive.  The Java virtual machine's standard \texttt{ClassLoader} can directly read \texttt{jar}s and load class code from them.
+
+%  \texttt{jar} files can contain more than just executable code: text files, resources, graphics, and anything else can be saved in them.  The \texttt{ClassLoader} will ignore them, but they can be accessed by the code within the \texttt{jar}.  Such an ability enables the single--file distribution of an entire Java application.  Java's J2EE (Java 2 Enterprise Edition) uses such a distribution model for its web applications, which deploy as a single file that's loaded by the application server and executed.  Java's WebStart application allows a simple URL to specify a remote application, which is loaded on demand and cached locally.  WebStart removes the need for an application to have a traditional installation phase, and always keeps the cached version up--to--date; greatly simplifying desktop maintenance across an organization.
+
+%-   Compilation                   
+%  -   Compilation process               
+%  -   Preprocessing stages                
+%  -   input & output                    
+%  -   archives & libraries                  
+%  -   application management           
+
+\subsubsection{Syntax}
+  Java's syntax for basic procedural use is very similar to C and C++.  However, it cannot be used without using the object--oriented features.  As implied by the compilation process, Java only compiles classes.  All code must exist within classes, either in methods, constructors, or static initialization blocks.
+
+	To demonstrate, take a look at Figure \ref{fig:java-simple}.  Like C, the entry point for any program in Java is \texttt{main()}.  However, Java doesn't allow any code to exist outside of a class definition, hence the need for the otherwise--useless  \texttt{MainContainer}.  
+
+  The syntax for declarations, loops, and conditionals is nearly identical to C and C++.  The standard set of \texttt{for}, \texttt{while}, and \texttt{do} loops exists.  Two main differences exist: (1) statements given as parameters to conditionals must be of \texttt{boolean} type, and (2) there are no explicit references or pointers.  For example, the comparison \texttt{(i==0)} could be written as simply \texttt{(i)} in C or C++; if all the bits of \texttt{i} are zero, then \texttt{i} is considered \texttt{false}.  Also, the variable \texttt{mc} is a reference to a heap--allocated \texttt{MainContainer}.  Unlike C++, no \texttt{*} or \texttt{\&} is necessary.
+
+  For primitive data types, the declarations are nearly identical to C and C++.  Every other declaration is implicitly a reference to an object.  References to references are not allowed.  Although the references keep the same lifetime as primitive types, the lifetimes of the objects are different.  All objects live on the heap through a call to \texttt{new}, and die upon garbage collection.
+
+\begin{figure}[ht!]
+\begin{verbatim}
+public class MainContainer {
+  int loop = 32;
+  
+  public static void main (String args[]) {
+    MainContainer mc = new MainContainer ();
+  for (int i=0; i<loop; i++) {
+    System.out.println ("Hello World");
+    if (i == 0) {
+      System.out.print ("!-");
+    }
+  }
+  }
+}
+\end{verbatim}
+\caption{Simple Java Program}
+\label{fig:java-simple}
+\end{figure}
+
+%-   Syntax                      
+%  -   Overview                      
+%  -   Procedural syntax                 
+%  -   Declarations                    
+%  -   Conditionals                    
+%  -   Loops                     
+%  -   Procedure calls                 
+
+\subsubsection{Type System}
+% Primitives
+  Java has taken a pick--and--choose approach to its type system from C++ and Objective--C.  The primitive types come from the latter.  Primitive types like \texttt{int}, \texttt{float}, \texttt{double}, \texttt{boolean}, and \texttt{char} all exist in Java and behave as they do in C, C++, or Objective--C.  The only difference is that their specific sizes and precisions are completely defined; unlike Objective--C or C++ where it varies upon the specific processor architecture.  
+
+  Similar to Objective--C's \texttt{NSNumber}, Java has fully--fledged class types that peer the primitives.  \texttt{Integer}, \texttt{Float}, \texttt{Double}, \texttt{Boolean}, and \texttt{String} all provide wrappers around a primitive value, as well as comparison and conversion operations.  As discussed later, Java's containers can only contain full objects, and these peers allow the primitive types to be used.  
+
+  Java doesn't have the concept of an explicit pointer or reference type; instead, every variable declared to be of a class's type is really a reference to an instance allocated on the heap.  Every such variable has to be initialized with a call to \texttt{new}, and any other variable set to be of the same value will refer to the same object.  While references to objects can be declared \texttt{final} like primitive types, making them immutable, the referred objects are always mutable.  To simulate a const object as in C++, the traditional Java method to return immutable objects is to define a subset of the object's interface with only ``getter" methods that allow the query but not modification of an object's state.  The true object's exposed interface is a superset of this, and it formally ``implements" it (discussed more later).
+
+% Arrays
+  Arrays in Java are essentially unidimensional.  They hold either primitive types or references to objects.  However, arrays are also objects, and thus references to arrays can be stored in arrays as well.  Through this double-indirect mechanism, multidimensional arrays are implemented in Java.  The immediate benefit of the flexibility is clear: arrays are simple to understand and flexible to use.  For example, the references to objects could be polymorphic; allowing further dynamism.
+
+  Arrays, like other Java objects, are always mutable and garbage collected.  They also ``know" their length, and can be queried for them as needed.  Arrays also have a peer, \texttt{Array}, which provides similar wrapping facilities as the other peers.
+
+% Type Safety/Checking
+  Java uses a similar type system as C++.  All variables are declared to have some type, either primitive or object.  Attempts to assign the variables values of other, incompatible types are errors.  Downcasting from a class to one of its subclass types is allowed.  However, there is little allowance for implicit conversion; only upcasting.  Even narrowing conversions between floating point types from literals are errors!
+
+\subsubsection{Objects}
+  Java's object model is a mix between C++ and Objective--C.  The methods are declared and used almost identically to C++ syntax.  However, the inheritance and polymorphic mechanisms within Java function more similarly to Objective--C.  
+
+% Messaging
+  Messages in Java look and act almost identically to C++: essentially functions with a hidden \texttt{this} pointer back to the object.  An attempt to call a method not implemented by the message recipient is flagged as a compile--time error.  Furthermore, methods can be overloaded: more than one method can be declared and defined with the same name, as long as their parameter list differs.  
+
+% Overloading
+  Unlike C++, default values for parameters, nor the overloading of operators are allowed.  There is one exception: Java's \texttt{String} class has concatenation operators defined, with definition for all the primitive types and behavior to call \texttt{toString} on all other objects given as parameters.
+
+%Inheritance
+  Class types fall into three categories: classes, abstract classes, and interfaces.  Classes have all methods defined, member variables, and are constructible.  They can also inherit from one other class, and \emph{implement} any number of interfaces.  Interfaces only have methods declared without implementation.  Classes implement interfaces by implementing all of their methods.  
+
+  Abstract classes are unconstructable objects with one or more methods unimplemented and marked \texttt{abstract}.  Unlike interfaces, they can have some methods defined for subclass use, but take the role as the only superclass.  Subclasses must implement all abstract methods of their abstract superclass and any implemented interfaces to be constructable.
+
+  For classes that have non-memory resources allocated, a \emph{finalizer} can be defined, which is run when the object is garbage collected.  However, the specific time of execution, or even a guarantee of execution, isn't provided.
+
+% Access Control
+  Access control is extremely C++-like: private, public, and package access is allowed.  Access sections like C++ aren't provided; each member and method has to have its own qualifier listed, otherwise it's assumed to be package--level access.  Inheritance and interface implementation, however, are always public.
+  
+  Objects can be queried of their type through several ways.  First, the \texttt{instanceof} operator returns a boolean value specifying if the object is an instance of a specific type or subtype thereof.  Next, \texttt{Class} provides the comparison methods \texttt{isInstance} and \texttt{isAssignableFrom}, both of which compare compatibility with another object.  Most often, the \texttt{instanceof} operator is used.
+
+  As mentioned before, classes can inherit from exactly one superclass.  When one isn't mentioned, it's Java's standard \texttt{Object}.  As a consequence, every object in the Java system inherits from Object.  Without multiple inheritance, questions about diamond inheritance, ambiguous superclass references, and the like are completely avoided.  Also as mentioned before, each compiled class has a description that's loaded, maintained, and checked by the virtual machine.  Such a description is available to the developer as an instance of type \texttt{Class}, available through \texttt{Object}'s \texttt{getClass} method.
+
+% Polymorphism
+  All methods are implicitly polymorphic; the C++ keyword \texttt{virtual} is assumed.  The Java keyword \texttt{final} will specify a method that cannot be overridden in base classes.  For a method to be overridden, it has to have the same access level as the original, and the same signature (method name and parameter types).  As upcasting is an implicit conversion, Java objects are often treated as if they were instances of their base class or an implemented interface.  Method calls to are routed to the closest ancestor's implementation.
+
+% Exceptions
+	Exceptions are based on C++: a \texttt{try} block containing code that may throw, one or more \texttt{catch} blocks that handle a specific type of exception, and specific to Java, a \texttt{finally} block for cleanup code that runs even if a stack unwind is in progress.
+
+	Unlike C++, Java's exceptions only use class types: throwing an integer or floating point value isn't possible.  The virtual machine is a source of many exceptions as well.  Illegal actions, such as trying to call a method on a null reference or casting an object not of the specified type, are trapped by the VM and result in exceptions being thrown in the running program.  This gives the running program a reasonable chance to trap the error and continue execution.
+
+% Generics
+  Java has a generics system in its 5.0 beta as of August 2004\cite{java-generics}.  Java's compiler has a simple preprocessor that allows the declaration of generic types.  Generic types in Java have a similar syntax as C++: angle brackets denote parameters to the generic type.  The parameters are used to denote types used for method parameters, member types, and return types.  The compiler will flag attempts to use an instantiation of a generic type that doesn't match its definition.  For example, a generic container will not allow insertions of objects that aren't instances or subclasses of its parameter.
+
+  Behind the scenes, the generic types have only one instantiation that's shared between all uses.  The parameter type names are all converted to \texttt{Object}, and compiled as a normal Java class.  This way, the traditional one--to--one mapping of a \texttt{.java} source file and the compiled \texttt{.class} still exists.  Unfortunately, the only gains from the generics feature are some type safety and reduced need for casting; none of the more powerful capabilities generics provide in C++ are available in Java.
+
+%-   Type System                   
+%  -   Primitive Type Handling (integer, Integer, etc)       
+%  -   Arrays                      
+%  -   Type Safety/Checking                
+%  -   Object Model                    
+	%  -   Messaging                   
+	%  -   Overloading                   
+		%  -   Operators                     
+	%  -   Access Control                    
+	%  -   Inheritance                   
+	%  -   Polymorphism                    
+%  -   Exceptions                    
+%  -   Generics                      
+
+\subsubsection{Runtime}
+	As mentioned before, the virtual machine loads Java \texttt{.class} files via a \texttt{ClassLoader}, which returns a \texttt{Class} object to the VM.  At startup, the VM is given a single class name to load, which must have a \texttt{public}, \texttt{static} method named \texttt{main} taking a single parameter: an array of \texttt{String}.  That method is run with the command line options given at the VM's invocation, with VM--specific options removed.
+
+	\texttt{main} may spawn any number of threads, which are supported natively by the VM.  Included with the ability to create new threads are in--language synchronization abilities, such as the ability to make a method \texttt{synchronized}: callable only from one thread at a time.  The virtual machine provides the threading and enforces the synchronization, even if the underlying platform doesn't do it natively.
+
+	Like C, C++, and Objective--C, the program lives only as long as \texttt{main} runs, even if other threads are still active when \texttt{main} completes.  During that lifetime, all memory allocated is tracked and managed by the VM.  Objects and graphs thereof with no incoming references are garbage collected and their memory reclaimed.
+
+	One of Java's most powerful assets is the wealth of standard libraries.  The standard library contains nearly 2,000 classes and interfaces in nearly 100 packages.  Together, a platform--independent system for developing desktop, web, and command--line applications exists, with facilities for almost every common development need.
+
+	Due to the easy packaging and distribution of platform--independent code, Java also has one of the richest 3rd party library communities.
+
+	Within the standard libraries lie Java's introspection mechanism.  The mechanism's libraries allow programmatic access to the class information the VM maintains.  As hinted before, the \texttt{Class} type provides the key interface for accessing a type's information.  With it, members, methods, interface, and superclass information is all available.  Moreover, \texttt{Class} provides a query function for getting the appropriate \texttt{Class} instance for a type with a specific name.  Such an ability, connected with the \texttt{ClassLoader} mechanism, allows a Java program to assimilate code that was not available at the original system's compilation, loading it, linking it, and running it when appropriate.
+
+	\texttt{Class} provides a healthy API, we present only the relevant subset for this discussion.  All the \texttt{public} constructors, methods, and members are accessible via \texttt{getConstructor}, \texttt{getMethod} and \texttt{getField}.  Plural versions of these methods exist that return arrays of each as well.  These methods return \texttt{Constructor}, \texttt{Method}, and \texttt{Field} objects.
+
+	\texttt{Constructor} is essentially a factory class.  Given the parameters it needs for initialization, its \texttt{newInstance} will return a newly constructed instance of the type.  It allows querying of the required parameter types via \texttt{get\-P\-ar\-am\-et\-er-\-T\-yp\-es}, which returns an array of \texttt{Class} objects.  Note that primitive types do have \texttt{Class} objects, but they must be passed to \texttt{Constructor} as wrapped objects.
+
+	\texttt{Method} acts almost as a selector in Objective--C.  Similar to \texttt{Constructor}, it has a \texttt{get\-Par\-am\-et\-er\-T\-yp\-es} method for accessing the parameters.  It also has \texttt{getReturnType} and \texttt{getName} for getting the full method description.  \texttt{invoke} in \texttt{Method} takes a recipient object and a set of parameters and invokes the method on the recipient.
+
+	\texttt{Field} provides \texttt{get} and \texttt{set} methods for objects and pairs of these methods for each primitive type.  All of them take a recipient object which contains the member variable in question.  The primitive type pairs are named as \texttt{getInt} and \texttt{setInt} which return and take primitive types for primitively--typed members.
+
+	All three classes, \texttt{Constructor}, \texttt{Method}, and \texttt{Field} will throw exceptions when they are used inappropriately.  Examples include passing the wrong parameter types, sending to the wrong object, or passing invalid values.  Because the classes must have type--agnostic interfaces, these errors cannot be caught by the compiler.
+%-   Runtime                     
+%  -   Startup                     
+%  -   Memory Management               
+%  -   Libraries                     
+%  -   Introspection                   
+
+%-------------------------------------------------------------------------------
+%\subsection{Old Stuff} 
+%  Java's a simple Object--Oriented langauge with a syntax based on C++ and an object model based on Objective--C.  Its messaging system is C++ based, and it all runs atop of a bytecode--based virtual machine.  Like C++, Java's strongly typed; a message can't be sent to an object whose type doesn't declare a method of that signature.
+%
+%  Types may inherit only from one other, but they may implement one or more additional \emph{interfaces}.  Interfaces are types with no members and no methods implemented.  They can't be directly instantiated, but references to them can be declared and implementing types can be upcast to them.
+%
+%\subsection{Language}
+%  Java's syntax for basic procedural use is very similar to C and C++.  However, it cannot be used without using the object--oriented features.  To demonstrate, take a look at Figure XXX.  Like C, the entry point for any program in Java is \texttt{main()}.  However, Java doesn't allow any code to exist outside of a class definition, hence the otherwise--empty \texttt{MainContainer}.  
+%
+%%DECL SYNTAX
+%
+%
+%  The syntax for declarations, loops, and conditionals is nearly identical to C and C++.  Two main differences exist: (1) statements given as parameters to conditionals must be of \texttt{boolean} type, and (2) there are no explicit references or pointers.  For example, the comparison \texttt{(i==0)} could be written as simply \texttt{(i)} in C or C++; if all the bits of \texttt{i} are zero, then \texttt{i} is considered \texttt{false}.  Also, the variable \texttt{mc} is a reference to a heap--allocated \texttt{MainContainer}.  Unlike C++, no \texttt{*} or \texttt{\&} is necessary.
+%
+%  For primitive nonpointer types, the declarations are nearly identical to C and C++.  Every other declaration is implicitly a reference to an object.  References to references are not allowed.  Although the references keep the same lifetime as primitive types, the lifetimes of the objects are different.  All objects live on the heap through a call to \texttt{new}, and die upon garbage collection.
+%
+%% ?? Can I declare a pointer to a const object \& a const pointer to a mutable object?? -- no.  A reference can be declared 'final', which makes it const.  The object itself is always mutable.
+%
+%
+%\begin{verbatim}
+%public class MainContainer {
+%  public static void main (String args[]) {
+%    MainContainer mc = new MainContainer ();
+%  for (int i=0; i<32; i++) {
+%    System.out.println ("Hello World");
+%    if (i == 0) {
+%      System.out.print ("!-");
+%    }
+%  }
+%  }
+%}
+%\end{verbatim}
+%
+%%TYPES
+%  Java has primitive types similar to C++.  The only significant difference is the string: Java translates literal strings (\texttt{"foo"}) to instances of class \texttt{String}, instead of an array of \texttt{char}.  Also, \texttt{String} is the only nonprimitive type with \texttt{operator+} defined (concatenation).  Except for \texttt{String}, every primitive type has a peer class defined, which encapsulates type--relevant operations such as stringification.  For \texttt{int}, \texttt{Integer} defines methods \texttt{parseInt}, \texttt{toString}, \texttt{MIN\_VALUE}, \texttt{MAX\_VALUE}, and \texttt{compareTo}.  Similar methods and members exist for the other basic types.
+%
+%  Arrays have different semantics.  They are all heap--allocated, garbage--collected, and have at most one dimension.  For nonprimitive types, the arrays contain references to objects.  Arrays can contain references to other arrays; implementing a form of multidimensionalism.
+%
+%  Class types fall into three categories: classes, abstract classes, and interfaces.  Classes have all methods defined, member variables, and are constructable.  They can also inherit from one other class, and \emph{implement} any number of interfaces.  Interfaces only have methods declared without implementation.  Classes implement interfaces by implementing their methods.  Finally, abstract classes are inconstructable objects with one or more methods unimplemented and marked \texttt{abstract}.  Unlike interfaces, they can have some methods defined for subclass use, but take the role as the only superclass.  Subclasses must implement all abstract methods of their abstract superclass and any implemented interfaces to be constructable.
+%
+%
+%%FUNCTIONS
+%
+%  All code must live within classes.  Almost all code is within a class's methods, with the remainder in a static initialization section.  Like C++, methods may be overloaded and overridden.  Unlike C++, methods go through the runtime polymorphic mechanisms by default.  To prevent it, the \texttt{final} keyword must be used.  
+%
+%  Unimplemented methods in interfaces are declared just like methods in classes, only they have a single semicolon to replace the body.  Unimplemented methods in abstract classes need the \texttt{abstract} keyword before the return type's listing.  Similarly, they have a semicolon replacing the body.
+%
+%
+%%METHOD CALLS
+%
+%%MEMORY MANAGEMENT
+%
+%%EXCEPTIONS
+%
+%\subsection{Object Model}
+%
+%%\subsection{
+%\subsection{Compilation}
+%  Java has a simple compiler with no preprocessing stages.  It generates bytecode for the method bodies and descriptions for every type, both to be used by the virtual machine (VM).  The VM executes the bytecode and uses the type descriptions for message dispatching and memory management.
+%
+%\subsection{Introspective Abilities}
+%  Java's introspective abilities are more structured than Objective--C.  Every object has a \texttt{Class} object, which can be acquired from the object and then queried for information about the object's type.  Included in the \texttt{Class} object are lists of constructors, members, methods, implemented interfaces and the superclass.
+%
+%  There are seperate \texttt{Constructor}, \texttt{Method}, and \texttt{Field} (for members) classes which contain all the relevant information for each.  Each provides methods to operate upon that which they describe.  For example, \texttt{Method} provides an \texttt{invoke} method, taking a destination object parameter and an array of \texttt{Object}s for the parameters of the call. \texttt{Constructor} is essentially a compiler--generated factory.
+%
+%  Because arrays are seperately allocated, an \texttt{Array} class is provided, which can generate arrays of any type via its \texttt{newInstance} method, which takes the \texttt{Class} of the type to make, and a set of dimensions for the array.
+
+%\subsection{API}
+\subsubsection{Case Study: Serialization}
+	Java provides built--in serialization\cite{957325,944589,376846}.  By implementing a zero--method interface \texttt{Serializable}, an object can be serialized.  The primitive types can also be serialized.
+
+	Use \texttt{Obj\-ect\-Outp\-utStr\-eam}\cite{java-api}, a wrapper around a normal Java \texttt{Out\-p\-ut\-Str\-eam}, to serialize the object.  \texttt{Obj\-ect\-Outp\-utStr\-eam}'s \texttt{writeObject} method will serialize the object to the stream, and its peer \texttt{Obj\-ect\-Inp\-utStr\-eam}'s \texttt{readObject} will deserialize it.
+
+	By sitting atop of the standard stream mechanism in Java, serialization works atop of any byte--stream I/O mechanism.  Included in the standard libraries are files and sockets.  The developer may write their own stream classes and send serialized objects over them with little difficulty.
+
+	Serialization is almost completely transparent to the object being marshaled.  The only time a class need worry about serialization is when it's got members that don't implement \texttt{Serializable}.  While most of Java's classes do, some don't for obvious reasons, like \texttt{Thread}.  For these members, the class must mark them \texttt{transient} in their declaration.
+
+	Furthermore, the class may need to know when it's being serialized or deserialized, so that it can adjust its state.  For example, it would have to reconstruct any \texttt{transient} members that were lost during serialization.  The class can define private \texttt{readObject} and/or \texttt{writeObject} methods which will be called during the relevant processes.  From there, it can prepare for serialization or fully restore from it.
+
+	Another option in Java is the \texttt{Externalizable} mechanism, which does less of the work by itself, in exchange for greater control of the serialization format.
+
+
+\subsubsection{Case Study: Distributed Objects}
+  Java provides a basic distributed objects mechanism called Remote Method Invocation (RMI)\cite{java-rmi}.  By implementing a zero--method interface \texttt{Remote}, an object specifies that it can be remotely invoked.  
+
+  When a message is sent to a remote object, the parameters are serialized.  Those parameters which implement \texttt{Remote} are given remotely--accessible identifiers, which are sent in their place.  A parameter that implements neither \texttt{Remote} nor \texttt{Serializable} can't be sent.  From there, the virtual machines interact to transport and dispatch the message.
+
+  % ? How does RMIC work with this?
+  % Could I use something like JavaAssist to help?
+  %  - JavaAssist is essentially a system extension
+  %  - It's ok to mention _if_ I mention that it's an extension
+
+  

@@ -1,0 +1,78 @@
+\subsection{OpenC++}
+	% Introduction
+	OpenC++\cite{chiba, opencpp, opencpp-tut} is an extension upon C++ that allows metaclasses to be defined, that plug into the compiler.  It's been used as the basis for a query--based debugger\cite{263752, 381750}.  These metaclasses define a translation layer between the input source code (in an extended C++ called simply OpenC++) and the C++ language proper.  The metaclass system allows full awareness of the structure of defined types (introspection) and of the context of each use of the defined types.  The metaclasses can modify both as the source code is compiled.
+
+	OpenC++ is a general--use system.  A similar approach\cite{240738} has been used specifically for the high--performance computing arena.
+
+	% Compilation Model
+	\subsubsection{Compilation}
+	The compilation system is dynamic: the input source code is compiled into plugins for the compiler, which then monitor and modify the compilation of itself.  Currently, only a single stage is allowed: the input source code is OpenC++, and the metaclasses must emit standard C++.  An extension is planned to allow metaclasses to emit OpenC++, which is then fed into additional passes through the metaclasses for them to emit C++.
+
+	The metaclasses have two parts.  First a \texttt{TypeInfo} object is generated for every declared type, describing its methods, members, and inheritance hierarchy.  Second, a metaclass is its own OpenC++ type derived from \texttt{Class}, containing event handlers that plug into the compiler.  The handlers are called when the compiler encounters the type itself or any uses of it.  The handlers are fed \texttt{PTree}s: constructs similar to Lisp S-expressions that describe the parse tree of the code being compiled.  The handler can modify the \texttt{PTree} before returning it to the compiler.  The handlers use the \texttt{TypeInfo} as needed to determine the necessary changes to the \texttt{PTree}.
+
+	% Introspective Abilities
+	\subsubsection{Introspective Abilities}
+	\texttt{TypeInfo} stores the traditional C++ structural definition of a type: its members, methods, and inheritance hierarchy.  As such, it provides all the information we need for an introspective mechanism.  However, it's only available for use to metaclasses in OpenC++ and runtime code in C++; there's no integration or availability to the template mechanisms within C++.
+	
+	To connect the introspective data to the template mechanism in C++; one has to write metaclasses that generate type traits describing the information found in the respective \texttt{TypeInfo}.
+
+	% Uses
+	\subsubsection{Case Study: Distributed Objects}
+	OpenC++ allows a simple implementation for the basic network distribution of objects.  A metaclass can simply handle calls to the type's methods, inserting any desired marshaling and I/O code necessary in the call's place.  Alternatively, a metaclass could generate a full stub class to act as a local proxy for the remote object.  
+
+	In OpenC++, a programmer can define new keywords that automatically specify the metaclass.  For example, the programmer could register a keyword \texttt{distribute} to specify a \texttt{DistributedObject} metaclass.  A simple ``hello world" class is shown in Figure \ref{fig:ocpp-dist}.
+
+\begin{figure}[ht!]
+\begin{verbatim}
+distribute class Greeter {
+public:
+    std::string getMessage ();
+};
+\end{verbatim}
+\caption{OpenC++ Class with Distribution Keywords}
+\label{fig:ocpp-dist}
+\end{figure}
+
+	\texttt{Greeter}'s metaclass would be \texttt{Dis\-tr\-ib\-ut\-ed\-Ob\-j\-ect}. \texttt{Dis\-tr\-ib\-ut\-ed\-Ob\-j\-ect} would make \texttt{get\-Mes\-s\-age} \texttt{virtual}, create a subclass called \texttt{Greeter\-\_proxy\-\_ala\-\_Dis\-tr\-ib\-ut\-ed\-Ob\-j\-ect}, and generate any glue necessary for the runtime distributed messaging system to let it create and configure the proxy.
+
+	\subsubsection{Case Study: Serialization}
+	OpenC++ makes easy work of serializing a type.  The metaclass can add new methods to the type to serialize and deserialize it.  These methods can serialize as much as they can, pushing off any other parts to run--time code.  
+
+	A type will typically have several categories of members to serialize:
+	\begin{enumerate}
+	\item \emph{Simple Members} --- Primitive types that can be directly serialized.  Such as integers, floats, and C strings.
+	\item \emph{Irrelevant Members} --- Members that need not be serialized.  For example, caches.
+	\item \emph{Simple References} --- Pointers to other objects completely owned by its single container, but in need of run--time support to serialize.  For example, a dynamically--allocated array.
+	\item \emph{Complex References} --- Pointers to objects that may already have been serialized, or may transitively refer back to the container.  For example, a graph of objects with cycles in it.  In such cases, a placeholder token may be needed to refer to an object already serialized.
+	\end{enumerate}
+
+	For each type, a keyword can be added.  For example, the class in Figure \ref{fig:ocpp-class-keyw} has members of each type.
+
+\begin{figure}[ht!]
+\begin{verbatim}
+persistent class DataObject {
+    // simple members
+    int a, b;
+    
+    // irrelevant members
+    transient int c,d;
+    
+    // simple references
+    single (serialize_array) int string_length;
+    single (serialize_array) char * string_body;
+    
+    // complex references
+    shared DataObject *parent;
+    
+    size_t serialize_array (mode_t inorout,
+                            memory_buffer &buffer,
+                            int &val_string_length, 
+                            char *&val_string_body);
+};
+\end{verbatim}
+\caption{OpenC++ Class with Serialization Keywords}
+\label{fig:ocpp-class-keyw}
+\end{figure}
+
+	The metaclass would have to keep track of which \texttt{DataObject}s were already serialized, and simply refer to them as needed.  For the simple references, the metaclass's serialization methods would call \texttt{serialize\_array} to bring the data values in and out of the memory buffer to the parameter member references (\texttt{val\_string\_length} and \texttt{val\_string\_body}).
+
