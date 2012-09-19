@@ -1,6 +1,8 @@
 \section{Appendix: Static Metadata}
 \label{appendix:metadata-appendix}
-In this appendix we describe the traits and types associated with the proposed \verb+metadata+ trait.
+
+In this appendix we describe the traits and types associated with the proposed
+\verb+metadata+ trait.
 
 \begin{alltt}
   template <class T>
@@ -9,7 +11,9 @@ In this appendix we describe the traits and types associated with the proposed \
   \};
 \end{alltt}
 
-As an analog to the \verb+type_descriptor_t+ defined in \autoref{appendix:type-descriptors-appendix} we present the following suggested traits for inspecting the special type \verb+metadata<T>::type+.
+As an analog to the \verb+type_descriptor_t+ defined in
+\autoref{appendix:type-descriptors-appendix} we present the following
+suggested traits for inspecting the special type \verb+metadata<T>::type+.
 
 \begin{alltt}
   template <class T>
@@ -18,7 +22,9 @@ As an analog to the \verb+type_descriptor_t+ defined in \autoref{appendix:type-d
   \};
 \end{alltt}
 
-The \verb+fields+ metafunction is meant to apply to the \verb+metadata+ associated with a given type. It yields a list of types which can then each be queried with the following traits:
+The \verb+fields+ metafunction is meant to apply to the \verb+metadata+
+associated with a given type. It yields a list of types which can then each be
+queried with the following traits:
 
 \begin{alltt}
   template <class T>
@@ -39,7 +45,9 @@ The \verb+fields+ metafunction is meant to apply to the \verb+metadata+ associat
   \};
 \end{alltt}
 
-Another metadata trait would be to get the functions associated with a given type (if there are any). We propose a special trait called \verb+functions+ for this purpose:
+Another metadata trait would be to get the functions associated with a given
+type (if there are any). We propose a special trait called \verb+functions+
+for this purpose:
 
 \begin{alltt}
   template <class T>
@@ -48,7 +56,10 @@ Another metadata trait would be to get the functions associated with a given typ
   \};
 \end{alltt}
 
-Just like the \verb+fields+ trait, this applies to a \verb+metadata\<T\>::type+. It yields a list of types which can then each be queried with the traits that apply with the result of \verb+fields+ and the following additional traits:
+Just like the \verb+fields+ trait, this applies to a
+\verb+metadata\<T\>::type+. It yields a list of types which can then each be
+queried with the traits that apply with the result of \verb+fields+ and the
+following additional traits:
 
 \begin{alltt}
   template <class T>
@@ -78,10 +89,14 @@ Just like the \verb+fields+ trait, this applies to a \verb+metadata\<T\>::type+.
   \};
 \end{alltt}
 
-The \verb+args+ trait will yield a type-list similar to what \verb+metadata+ will provide.
+The \verb+args+ trait will yield a type-list similar to what \verb+metadata+
+will provide.
 
-The \verb+qualifiers<T>::value+ value will be similar to what \verb+function\_descriptor\_t::qualifiers+ contains.
+The \verb+qualifiers<T>::value+ value will be similar to what
+\verb+function_descriptor_t::qualifiers+ contains.
 
-The \verb+member_of+ trait will yield a type similar to what \verb+metadata+ will provide.
+The \verb+member_of+ trait will yield a type similar to what \verb+metadata+
+will provide.
 
-In all these traits, the implementation decides what the types and values are (or whether they are available on inhibited for certain types).
+In all these traits, the implementation decides what the types and values are
+(or whether they are available on inhibited for certain types).
