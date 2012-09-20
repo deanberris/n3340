@@ -1,5 +1,5 @@
 \documentclass[10pt,a4paper]{article}
-\title{N3410 --- Rich Pointers}
+\title{N3410 --- Rich Pointers with Dynamic and Static Introspection}
 \author{Dean Michael Berris (dberris@google.com) \and Lawrence Crowl
 (crowl@google.com) \and Matt Austern (austern@google.com) \and Lally Singh (lally@google.com)}
 \date{Sept. 18, 2012}
@@ -17,8 +17,7 @@
 \usepackage{fancyhdr}
 \setlength{\headheight}{15pt}
 \pagestyle{fancyplain}
-\lhead{\fancyplain{}{ISO/IEC JTC1 SC22 WG21 N3410=12-0100 - Rich Pointers; Date:
-2012-09-18}}
+\lhead{\fancyplain{}{ISO/IEC JTC1 SC22 WG21 N3410=12-0100; Date: 2012-09-18}}
 \rhead{}
 \rfoot{\fancyplain{}{\thepage}}
 \cfoot{}
@@ -29,6 +28,9 @@
 
 % Let's use pretty hyperlink references...
 \usepackage{hyperref}
+
+% Let's also include the Bibliography in the TOC.
+\usepackage[nottoc,numbib]{tocbibind}
 
 \begin{document}
 \maketitle

@@ -6,4 +6,6 @@
 *.swp
 *.pdf
 *.gz
+*.bbl
+*.blg
 source/n3340/

@@ -1,20 +1,22 @@
 
 \section{Introspection in Programming Languages}
 \label{appendix:introspection}
+
 Introspection is a major capability missing from C++. With it, software
-components have the ability to simultaneously interact more intimately and more
-generically.
-	
+components have the ability to simultaneously interact more intimately and
+more generically.
+
 For example, the JavaBeans \cite{javabeans} architecture uses a combination of
-introspection and naming conventions to enable the automatic lookup, discovery,
-instantiation, and initialization of Java classes from a data definition that’s
-only available at class time. One common use is for an application to read in a
-row of a table in a database and call setY on an entity class (called a Bean in
-Java terminology) for every column Y in the row. The application’s code can use
-metadata from the database to get all the columns available, and introspect the
-bean to find and call the appropriate initialization method.
-	
-Java, Smalltalk, and Objective–C provide introspection via runtime data
+introspection and naming conventions to enable the automatic lookup,
+discovery, instantiation, and initialization of Java classes from a data
+definition that’s only available at class time. One common use is for an
+application to read in a row of a table in a database and call setY on an
+entity class (called a Bean in Java terminology) for every column Y in the
+row. The application’s code can use metadata from the database to get all the
+columns available, and introspect the bean to find and call the appropriate
+initialization method.
+
+Java, Smalltalk, and Objective-C provide introspection via runtime data
 structures. Such data structures are generated for each class, method, and
 member. For large systems, the storage overhead can become significant. Also,
 the introspection requires runtime access to work; adding overhead to the
