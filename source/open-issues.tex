@@ -1,0 +1,36 @@
+\section{Open Issues}
+
+At the time of this writing there are two open issues with the runtime type
+system registration and invalidation. We enumerate these below which require
+committee feedback and further investigation for future revisions to the
+paper:
+
+\begin{itemize}
+
+ \item \textbf{Dynamic invalidation of statically registered types.} Currently
+it is implied that the registration mechanism for statically-linked type
+descriptors is implementation-defined, and that the registry mechanism may
+vary. Future revisions to the paper should have this addressed based on
+feedback from the committee.
+
+ \item \textbf{Type name to descriptor mapping.} As C++ does not define
+link-time requirements on type names and how they map to actual objects from
+different modules, introducing a mapping based on a type's name may be
+problematic. What comes to mind are types with the same name in the anonymous
+namespace in two different translation units. Whether there's a name conflict
+is unclear, and an implementation may have to disambiguate the type's names
+using some other mechanism than just the mangled symbol name.
+
+ \item \textbf{Shared library semantics are platform-dependent and undefined
+by the standard.} A lot of the invalidation and shared-library/module specific
+information in the paper assumes a consistent behavior of dynamically loaded
+libraries. Without clear standards on how shared-libraries work across
+platforms much of the guarantees may not be made on all current platforms.
+Feedback on the direction for shared/dynamic library semantics and whether
+these should be standardized would be greatly appreciated.
+
+\end{itemize}
+
+It is the authors' hope that these issues would be at least discussed if
+interest in getting runtime introspection into the standard at some point in
+the future.

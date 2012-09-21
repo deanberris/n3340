@@ -8,12 +8,16 @@
 % We want to create paragraphs that don't indent the first line.
 \setlength{\parindent}{0cm}
 
+% We want to save a few trees too.
+\addtolength{\textwidth}{4cm}
+\addtolength{\hoffset}{-2cm}
+
 % We also want to add a line after each paragraph.
 \usepackage{parskip}
 
-% Now we want the document number to appear at the header of the page, while the
-% footer will only contain the page number flush to the right. To do this we use
-% the fancyhdr package.
+% Now we want the document number to appear at the header of the page, while
+% the footer will only contain the page number flush to the right. To do this
+% we use the fancyhdr package.
 \usepackage{fancyhdr}
 \setlength{\headheight}{15pt}
 \pagestyle{fancyplain}
@@ -40,6 +44,7 @@
 \input{proposed-solution.tex}
 \input{rationale.tex}
 \input{implementation-hints.tex}
+\input{open-issues.tex}
 \input{references.tex}
 \input{acknowledgements.tex}
 \input{appendix.tex}

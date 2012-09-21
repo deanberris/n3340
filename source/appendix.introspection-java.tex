@@ -4,27 +4,11 @@
 %  -   History                     
 %  -   Intent                      
 
-Java\cite{java} is a programming language derived from Objective--C and C++.
-Developed at Sun Microsystems, it has become extremely popular for World Wide
-Web applications. Originally intended as an embedded systems language, one of
-Java's original goals was platform independence. That goal has lead to a
-toolchain and runtime that runs on the vast majority of the worlds' desktop
-computers and some of the larger embedded platforms. Linux, Windows, MacOS,
-Symbian, PalmOS, and many variants of Unix are just a few of the operating
-systems Java runs on today.
-
-Due to its ease of access, strong APIs, and simple programming model, Java has
-become one of the dominant languages used today. Java's virtual machine (VM)
-executes Java Byte Code, an assembly--like language atop of a stack--based
-virtual processor. However, the virtual machine has some unusual intelligence
-to it: specifically that it knows about objects. Java is thoroughly
-object--oriented, and that shows in the virtual machine's architecture.
-
-The virtual machine starts and loads up classes from a \texttt{ClassLoader},
-an object responsible for loading class definitions into the system for use.
-\texttt{ClassLoader}s can be custom--written and added to the system to work
-in unison with the default file--based loader, allowing networked access or
-on--the--fly class generation\cite{javassist}.
+The Java virtual machine starts and loads up classes from a
+\texttt{ClassLoader}, an object responsible for loading class definitions into
+the system for use. \texttt{ClassLoader}s can be custom--written and added to
+the system to work in unison with the default file--based loader, allowing
+networked access or on--the--fly class generation\cite{javassist}.
 
 Beyond knowing how to load segments of code in classes, Java's virtual machine
 has another capability granted from its knowledge of the object model: garbage

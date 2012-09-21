@@ -5,49 +5,52 @@ objects is crucial.  These application areas include:
 
 \begin{itemize}
 
-  \item \textbf{Highly available server applications that have to stay up as a
-  long running process and enable for dynamic adaptation to changing
-  requirements.} Upgrades to these applications currently need to be closely
-  coordinated and tightly controlled, usually requiring that the service be
-  actually brought down when an upgrade is required. There are solutions that
-  exist which involve dynamically loaded libraries but changing the design of
-  already packaged types in the system usually require downtime to rebuild and
-  relink the binary.
+  \item \textbf{Dynamic Adaptation.} Highly available server applications that
+  have to stay up as a long running process and enable for dynamic adaptation
+  to changing requirements. Upgrades to these applications currently need to
+  be closely coordinated and tightly controlled, usually requiring that the
+  service be actually brought down when an upgrade is required. There are
+  solutions that exist which involve dynamically loaded libraries but changing
+  the design of already packaged types in the system usually require downtime
+  to rebuild and relink the binary.
 
-  \item \textbf{Applications that embed dynamic programming languages
-  typically settle for either a static interface to which the embedded dynamic
-  language runtime, or a pure data interface implementing a (static) protocol
-  between the embedded environment and the host application.} Usually the
-  dynamic types that can be generated in these embedded virtual machines are
-  only usable in the context of these virtual machines limiting the
-  interactions by which these embedded types interact with the host
-  application.
+  \item \textbf{Embedded Dynamic Languages.} Applications that embed dynamic
+  programming languages typically settle for either a static interface to
+  which the embedded dynamic language runtime, or a pure data interface
+  implementing a (static) protocol between the embedded environment and the
+  host application. Usually the dynamic types that can be generated in these
+  embedded virtual machines are only usable in the context of these virtual
+  machines limiting the interactions by which these embedded types interact
+  with the host application.
 
-  \item \textbf{Distributed computing systems written in C++ are largely tied
-  to static interfaces and types because of the limitation of the programming
-  language.} We currently do not have a standard programmatic way of
-  dynamically generating types and referring to objects of these types and
-  streaming objects of these types from one system to another. Current state
-  of the art relies on code generators, domain specific languages, and even
-  communication frameworks to achieve remote procedure calling and sharing
-  state across elements in a distributed system.
+  \item \textbf{Distributed Computing.} Distributed computing systems written
+  in C++ are largely tied to static interfaces and types because of the
+  limitation of the programming language. We currently do not have a standard
+  programmatic way of dynamically generating types and referring to objects of
+  these types and streaming objects of these types from one system to another.
+  Current state of the art relies on code generators, domain specific
+  languages, and even communication frameworks to achieve remote procedure
+  calling and sharing state across elements in a distributed system.
 
-  \item \textbf{Applications use machine learning and dynamic modeling of
-  environments through continuous refinement of data structures in memory rely
-  on the capability to treat code as data, or at least be able to inspect the
-  state and relationship between types in a hierarchy of types.} The current
-  limitations of the language force the applications that deal with constantly
-  changing structures and types is to model them in runtime as merely data,
-  losing much of the power of the programming language’s runtime facility for
-  efficiently modeling types and objects in the process.
+  \item \textbf{Data Structure Refinement.} Applications use machine learning
+  and dynamic modeling of environments through continuous refinement of data
+  structures in memory rely on the capability to treat code as data, or at
+  least be able to inspect the state and relationship between types in a
+  hierarchy of types. The current limitations of the language force the
+  applications that deal with constantly changing structures and types is to
+  model them in runtime as merely data, losing much of the power of the
+  programming language’s runtime facility for efficiently modeling types and
+  objects in the process.
 
-  \item \textbf{Graphical user interfaces typically rely on being able to
-  inspect in­-memory structures to represent graphical elements to be rendered
-  on screen.} Almost all the sufficiently advanced graphical user interface
-  toolkits now use a statically­ defined and very rigid type system and
-  implement a runtime meta­type system because the programming language
-  currently does not have a facility of doing proper rich runtime
-  introspection of types. \end{itemize}
+  \item \textbf{Dynamic Characterization.} Graphical user interfaces typically
+  rely on being able to inspect in­-memory structures to represent graphical
+  elements to be rendered on screen. Almost all the sufficiently advanced
+  graphical user interface toolkits now use a statically­defined and very
+  rigid type system and implement a runtime meta­type system because the
+  programming language currently does not have a facility of doing proper rich
+  runtime introspection of types.
+
+\end{itemize}
 
 There are several problems that this paper aims to address. Here are some of
 these problems:
